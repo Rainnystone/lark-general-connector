@@ -1,0 +1,40 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "lark-general-connector",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-07",
+  // nodejs_compat: createMcpHandler (agents) imports node:async_hooks.
+  // Dashboard encrypted secrets are not listed here. A var with the same name
+  // as a secret breaks Workers Builds deploy.
+  "compatibility_flags": ["global_fetch_strictly_public", "nodejs_compat"],
+  "workers_dev": true,
+  "keep_vars": true,
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "head_sampling_rate": 1 },
+    "traces": { "enabled": true, "head_sampling_rate": 1 }
+  },
+  "vars": {
+    "PUBLIC_URL": "https://example.workers.dev",
+    "ALLOWED_REDIRECT_URIS": "https://claude.ai/api/mcp/auth_callback,https://chatgpt.com/connector_platform_oauth_redirect,https://chatgpt.com/connector/oauth/"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "OAUTH_KV"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "FEISHU_TOKENS",
+        "class_name": "FeishuTokenStore"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["FeishuTokenStore"]
+    }
+  ]
+}

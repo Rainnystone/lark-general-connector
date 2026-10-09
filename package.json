@@ -1,0 +1,24 @@
+{
+  "name": "lark-general-connector",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "tsc --noEmit && tsc --noEmit -p test && node --test scripts/check-no-secrets.test.mjs && node scripts/check-no-secrets.mjs && vitest run",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p test",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@cloudflare/workers-oauth-provider": "1.2.3",
+    "@modelcontextprotocol/server": "2.0.0",
+    "agents": "0.27.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.3.7",
+    "@types/node": "^22.19.0",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11",
+    "wrangler": "4.148.0"
+  }
+}

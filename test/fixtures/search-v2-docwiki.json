@@ -1,0 +1,55 @@
+{
+  "note": "Synthetic doc_wiki search page. Highlight tags, a wiki SHEET, result urls, and the opaque page_token shape are kept. Titles are fictional. owner_id is ou_owner. URLs use example.feishu.cn. The page-token cache key is a redaction marker.",
+  "data": {
+    "has_more": true,
+    "page_token": "{\"Mode\":0,\"GeoStrategyInfos\":{\"eu_nc\":{\"Mode\":0,\"Size\":3,\"Offset\":3,\"PreviousOffset\":0,\"Total\":8,\"strategies_infos\":[{\"strategies\":{},\"before_current_strategy_have_recalled_count\":0},{\"strategies\":{},\"before_current_strategy_have_recalled_count\":8}],\"last_strategy_infos\":{\"strategies\":{},\"before_current_strategy_have_recalled_count\":0},\"search_cold\":true}},\"size\":3,\"offset\":3,\"total\":8,\"HasMore\":true,\"shown_recordids_cache_Key\":\"redacted-cache-key\",\"search_cold\":true}",
+    "total": 8,
+    "res_units": [
+      {
+        "entity_type": "WIKI",
+        "result_meta": {
+          "create_time": 1774317681,
+          "doc_types": "DOCX",
+          "icon_info": "{\"type\":0,\"key\":\"\",\"obj_type\":22,\"obj_sub_type\":0,\"file_type\":null,\"token\":\"doxcnObj1\",\"version\":1757}",
+          "last_open_time": 1791222609,
+          "owner_id": "ou_owner",
+          "token": "wikcnDoc1",
+          "update_time": 1778316804,
+          "url": "https://example.feishu.cn/wiki/wikcnDoc1"
+        },
+        "summary_highlighted": "",
+        "title_highlighted": "<h>Lumen Brief</h>"
+      },
+      {
+        "entity_type": "WIKI",
+        "result_meta": {
+          "create_time": 1764596312,
+          "doc_types": "SHEET",
+          "icon_info": "{\"type\":0,\"key\":\"\",\"obj_type\":3,\"obj_sub_type\":0,\"file_type\":null,\"token\":\"shtcnObj\",\"version\":7}",
+          "last_open_time": 0,
+          "owner_id": "ou_owner",
+          "token": "wikcnSheet",
+          "update_time": 1772248611,
+          "url": "https://example.feishu.cn/wiki/wikcnSheet"
+        },
+        "summary_highlighted": "UI<h>Lumen Brief</h>19990101",
+        "title_highlighted": "UI<h>Lumen Brief</h>19990101"
+      },
+      {
+        "entity_type": "WIKI",
+        "result_meta": {
+          "create_time": 1764596303,
+          "doc_types": "DOCX",
+          "icon_info": "{\"type\":0,\"key\":\"\",\"obj_type\":22,\"obj_sub_type\":0,\"file_type\":null,\"token\":\"doxcnObj3\",\"version\":5}",
+          "last_open_time": 0,
+          "owner_id": "ou_owner",
+          "token": "wikcnDoc3",
+          "update_time": 1764596303,
+          "url": "https://example.feishu.cn/wiki/wikcnDoc3#doxcnAnchor"
+        },
+        "summary_highlighted": "UI<h>Lumen Brief</h>19990101",
+        "title_highlighted": "Route Sketches"
+      }
+    ]
+  }
+}
