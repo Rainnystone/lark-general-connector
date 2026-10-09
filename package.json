@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "tsc --noEmit && tsc --noEmit -p test && node --test scripts/check-no-secrets.test.mjs scripts/deploy-config.test.mjs && node --experimental-strip-types --test scripts/setup-wizard.test.mjs && node scripts/check-no-secrets.mjs && vitest run",
+    "test": "tsc --noEmit && tsc --noEmit -p test && node --test scripts/check-no-secrets.test.mjs scripts/deploy-config.test.mjs && node --experimental-strip-types --test scripts/setup-wizard.test.mjs scripts/agents-md.test.mjs && node scripts/check-no-secrets.mjs && vitest run",
     "setup": "node --experimental-strip-types scripts/setup.mjs",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit && tsc --noEmit -p test",
