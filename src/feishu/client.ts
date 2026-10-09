@@ -1,44 +1,10 @@
 import { env } from "cloudflare:workers";
+import { parseFeishuRegion, rewriteUrlForRegion, type FeishuRegion } from "./region";
 
 export const OUTBOUND_LIMIT = 40;
 
-export type FeishuRegion = "feishu" | "lark";
-
-const LARK_HOSTS: Readonly<Record<string, string>> = {
-  "open.feishu.cn": "open.larksuite.com",
-  "accounts.feishu.cn": "accounts.larksuite.com",
-  "mcp.feishu.cn": "mcp.larksuite.com",
-};
-
-/** Only the two configured regions are valid. Anything else fails closed. */
-export function parseFeishuRegion(value: string | undefined): FeishuRegion | null {
-  switch (value) {
-    case "feishu":
-    case "lark":
-      return value;
-    default:
-      return null;
-  }
-}
-
-/** Allowlist stays on canonical feishu.cn hosts. Lark rewrites the host after that check. */
-export function rewriteUrlForRegion(url: string, region: FeishuRegion): string {
-  switch (region) {
-    case "feishu":
-      return url;
-    case "lark": {
-      const parsed = new URL(url);
-      const host = LARK_HOSTS[parsed.host];
-      if (host === undefined) throw new Error("Feishu host is not mapped for lark");
-      parsed.host = host;
-      return parsed.toString();
-    }
-    default: {
-      const unexpected: never = region;
-      return unexpected;
-    }
-  }
-}
+export { parseFeishuRegion, rewriteUrlForRegion };
+export type { FeishuRegion };
 
 export function currentFeishuRegion(): FeishuRegion {
   const region = parseFeishuRegion(env.FEISHU_REGION);

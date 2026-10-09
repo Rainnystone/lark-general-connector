@@ -8,19 +8,11 @@ import { FeishuClient } from "../feishu/client";
 import { feishuScopeString } from "../scopes";
 import { isRedirectAllowed } from "../redirects";
 import { grantUserId } from "./grants";
+import { configuredOwner } from "./open-id";
 import { approvalPage, bootstrapDeniedPage, forbiddenPage } from "./pages";
 import { openStateCookie, readCookie, sealStateCookie, stateCookieHeader, stateCookieName, stateExpiry } from "./state-cookie";
 
-const OPEN_ID = /^ou_[0-9A-Za-z]+$/;
-
-function isOpenId(value: string): boolean {
-  return OPEN_ID.test(value);
-}
-
-export function configuredOwner(value: string): string | null {
-  const owner = value.trim();
-  return isOpenId(owner) ? owner : null;
-}
+export { configuredOwner };
 
 export function publicOrigin(env: Env, request: Request): string {
   const configured = env.PUBLIC_URL.trim();
