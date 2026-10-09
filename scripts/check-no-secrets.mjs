@@ -61,10 +61,143 @@ function collect(path, text, failures) {
   }
 }
 
+function readText(path) {
+  try {
+    return readFileSync(path, "utf8");
+  } catch {
+    return null;
+  }
+}
+
+function section(text, heading) {
+  const start = text.indexOf(`\n${heading}\n`);
+  const atStart = text.startsWith(`${heading}\n`);
+  const from = atStart ? 0 : start;
+  if (from === -1) return null;
+  const bodyStart = from + (atStart ? heading.length + 1 : heading.length + 2);
+  const rest = text.slice(bodyStart);
+  const next = rest.search(/\n## /);
+  return next === -1 ? rest : rest.slice(0, next);
+}
+
+function hasName(text, name) {
+  return new RegExp(`\\b${name}\\b`).test(text);
+}
+
+function parseJsonc(text) {
+  const stripped = text.replace(/^\s*\/\/.*$/gm, "");
+  try {
+    return { value: JSON.parse(stripped), parsed: true };
+  } catch {
+    return { value: null, parsed: false };
+  }
+}
+
+function wranglerConfigNames(json) {
+  if (typeof json !== "object" || json === null) return [];
+  const names = [];
+  if (typeof json.vars === "object" && json.vars !== null && !Array.isArray(json.vars)) {
+    names.push(...Object.keys(json.vars));
+  }
+  if (Array.isArray(json.kv_namespaces)) {
+    for (const kv of json.kv_namespaces) {
+      if (kv && typeof kv.binding === "string") names.push(kv.binding);
+    }
+  }
+  const durableBindings = json.durable_objects?.bindings;
+  if (Array.isArray(durableBindings)) {
+    for (const binding of durableBindings) {
+      if (binding && typeof binding.name === "string") names.push(binding.name);
+    }
+  }
+  return names;
+}
+
+function envStringVars(text) {
+  const match = text.match(/interface Env\s*\{([\s\S]*?)\n\s*\}/);
+  if (!match) return [];
+  const names = [];
+  for (const line of match[1].split("\n")) {
+    const prop = /^\s*([A-Z][A-Z0-9_]*)\??:\s*string\b/.exec(line);
+    if (prop) names.push(prop[1]);
+  }
+  return names;
+}
+
+function packageBindingNames(json) {
+  if (typeof json !== "object" || json === null) return [];
+  const bindings = json.cloudflare?.bindings;
+  if (typeof bindings !== "object" || bindings === null || Array.isArray(bindings)) return [];
+  return Object.keys(bindings);
+}
+
+function devVarNames(text) {
+  const names = [];
+  for (const line of text.split("\n")) {
+    const match = /^([A-Z][A-Z0-9_]*)=/.exec(line.trim());
+    if (match) names.push(match[1]);
+  }
+  return names;
+}
+
+function readmeConfigNames(text) {
+  const names = new Set();
+  for (const match of text.matchAll(/`([A-Z][A-Z0-9_]+)`/g)) names.add(match[1]);
+  return [...names].sort();
+}
+
+export function scanReadmeConfig(root) {
+  const normalized = root.replace(/[\\/]+$/, "");
+  const readme = readText(join(normalized, "README.md"));
+  if (readme === null) return ["README.md is missing"];
+  const failures = [];
+  const english = section(readme, "## English");
+  const chinese = section(readme, "## 中文");
+  if (english === null) failures.push("README.md is missing the English section");
+  if (chinese === null) failures.push("README.md is missing the 中文 section");
+  const wrangler = readText(join(normalized, "wrangler.jsonc"));
+  const devVars = readText(join(normalized, ".dev.vars.example"));
+  const env = readText(join(normalized, "src", "env.ts"));
+  const manifest = readText(join(normalized, "package.json"));
+  const codeNames = new Set([
+    ...(devVars === null ? [] : devVarNames(devVars)),
+    ...(env === null ? [] : envStringVars(env)),
+  ]);
+  if (wrangler !== null) {
+    const parsed = parseJsonc(wrangler);
+    if (!parsed.parsed) failures.push("wrangler.jsonc does not parse");
+    else for (const name of wranglerConfigNames(parsed.value)) codeNames.add(name);
+  }
+  if (manifest !== null) {
+    let parsed;
+    try {
+      parsed = JSON.parse(manifest);
+    } catch {
+      failures.push("package.json does not parse");
+      parsed = null;
+    }
+    if (parsed !== null) for (const name of packageBindingNames(parsed)) codeNames.add(name);
+  }
+  for (const name of readmeConfigNames(readme)) {
+    if (!codeNames.has(name)) {
+      failures.push(`README.md names ${name}, which is not a var, secret, or binding in the code`);
+    }
+  }
+  for (const name of [...codeNames].sort()) {
+    if (english !== null && !hasName(english, name)) {
+      failures.push(`README.md English section does not document ${name}`);
+    }
+    if (chinese !== null && !hasName(chinese, name)) {
+      failures.push(`README.md 中文 section does not document ${name}`);
+    }
+  }
+  return failures;
+}
+
 const isMain = process.argv[1] && import.meta.url.endsWith(process.argv[1].replaceAll("\\", "/"));
 if (isMain) {
   const root = new URL("..", import.meta.url).pathname;
-  const failures = scanTree(root);
+  const failures = [...scanTree(root), ...scanReadmeConfig(root)];
   if (failures.length > 0) {
     console.error(failures.join("\n"));
     process.exit(1);

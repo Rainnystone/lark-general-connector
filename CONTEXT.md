@@ -9,7 +9,7 @@ The single human this Worker acts for, identified by their Feishu open_id for th
 _Avoid_: user, admin
 
 **Connector client**:
-Claude.ai or ChatGPT acting as an OAuth client of the Worker.
+Any OAuth MCP client of the Worker.
 _Avoid_: app, plugin
 
 **Worker**:
