@@ -11,8 +11,25 @@ import { grantUserId } from "./grants";
 import { approvalPage, bootstrapDeniedPage, forbiddenPage } from "./pages";
 import { openStateCookie, readCookie, sealStateCookie, stateCookieHeader, stateCookieName, stateExpiry } from "./state-cookie";
 
-function callbackUrl(env: Env): string {
-  return `${env.PUBLIC_URL.replace(/\/$/, "")}/callback`;
+const OPEN_ID = /^ou_[0-9A-Za-z]+$/;
+
+function isOpenId(value: string): boolean {
+  return OPEN_ID.test(value);
+}
+
+export function configuredOwner(value: string): string | null {
+  const owner = value.trim();
+  return isOpenId(owner) ? owner : null;
+}
+
+export function publicOrigin(env: Env, request: Request): string {
+  const configured = env.PUBLIC_URL.trim();
+  if (configured.length === 0) return new URL(request.url).origin;
+  return new URL(configured).origin;
+}
+
+function callbackUrl(env: Env, request: Request): string {
+  return `${publicOrigin(env, request)}/callback`;
 }
 
 function text(body: string, status: number): Response {
@@ -57,14 +74,14 @@ function redirect(location: string, headers: Headers): Response {
   return new Response(null, { status: 302, headers: next });
 }
 
-async function startUpstream(env: Env, oauth: OAuthHelpers, request: AuthRequest, headers: Headers): Promise<Response> {
+async function startUpstream(env: Env, oauth: OAuthHelpers, request: AuthRequest, headers: Headers, incoming: Request): Promise<Response> {
   const upstream = await oauth.beginUpstream(request, { headers });
   const nonce = bytesToBase64Url(crypto.getRandomValues(new Uint8Array(16)));
   const sealed = await sealStateCookie({ state: upstream.state, exp: stateExpiry(), nonce }, env.COOKIE_SECRET);
   upstream.headers.append("set-cookie", stateCookieHeader(await stateCookieName(upstream.state), sealed));
   const location = feishuAuthorizeUrl({
     clientId: env.FEISHU_APP_ID,
-    redirectUri: callbackUrl(env),
+    redirectUri: callbackUrl(env, incoming),
     scope: feishuScopeString(),
     state: upstream.state,
   });
@@ -89,7 +106,7 @@ async function handleAuthorize(request: Request, env: Env, oauth: OAuthHelpers):
   if (!isRedirectAllowed(authRequest.redirectUri, env.ALLOWED_REDIRECT_URIS)) return text("redirect URI is not allowed", 400);
 
   const remembered = await oauth.isConsentRemembered(request, authRequest, { secret: env.COOKIE_SECRET });
-  if (remembered) return startUpstream(env, oauth, authRequest, new Headers());
+  if (remembered) return startUpstream(env, oauth, authRequest, new Headers(), request);
   const consent = await oauth.beginConsent(authRequest);
   const described = await oauth.describeConsent(authRequest);
   const page = approvalPage({ clientName: described.clientName, redirectHost: described.redirectHost, handle: consent.handle });
@@ -111,7 +128,7 @@ async function handleDecision(request: Request, env: Env, oauth: OAuthHelpers): 
     scope: ["offline_access"],
     remember: { secret: env.COOKIE_SECRET },
   });
-  return startUpstream(env, oauth, approved.request, approved.headers);
+  return startUpstream(env, oauth, approved.request, approved.headers, request);
 }
 
 async function handleCallback(request: Request, env: Env, oauth: OAuthHelpers): Promise<Response> {
@@ -144,7 +161,7 @@ async function handleCallback(request: Request, env: Env, oauth: OAuthHelpers): 
       client_id: env.FEISHU_APP_ID,
       client_secret: env.FEISHU_APP_SECRET,
       code,
-      redirect_uri: callbackUrl(env),
+      redirect_uri: callbackUrl(env, request),
     }),
   );
   if (exchanged.kind !== "ok") {
@@ -163,11 +180,12 @@ async function handleCallback(request: Request, env: Env, oauth: OAuthHelpers): 
     return text("login failed", 502);
   }
 
-  if (!env.OWNER_OPEN_ID) {
+  const owner = configuredOwner(env.OWNER_OPEN_ID);
+  if (owner === null) {
     audit({ event: "auth_rejected" });
     return bootstrapDeniedPage(info.openId);
   }
-  if (info.openId !== env.OWNER_OPEN_ID) {
+  if (info.openId !== owner) {
     audit({ event: "auth_rejected" });
     return forbiddenPage();
   }

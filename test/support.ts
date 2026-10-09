@@ -12,6 +12,7 @@ export function restoreEnv(): void {
   env.OWNER_OPEN_ID = "ou_owner";
   env.COOKIE_SECRET = "test-cookie-secret-32-characters-min";
   env.FEISHU_REGION = "feishu";
+  env.PUBLIC_URL = PUBLIC_URL;
   env.MCP_DISABLED = "0";
   env.TOOL_BACKENDS = "";
   env.P2P_DISCOVERY = "";
@@ -62,8 +63,8 @@ export class CookieJar {
   }
 }
 
-export function workerFetch(path: string, init?: RequestInit): Promise<Response> {
-  const url = new URL(path, PUBLIC_URL);
+export function workerFetch(path: string, init?: RequestInit, requestOrigin = PUBLIC_URL): Promise<Response> {
+  const url = new URL(path, requestOrigin);
   const headers = new Headers(init?.headers);
   if (!headers.has("host")) headers.set("host", url.host);
   return exports.default.fetch(new Request(url, { redirect: "manual", ...init, headers }));
@@ -81,7 +82,7 @@ export async function clientPkce(): Promise<{ verifier: string; challenge: strin
   return { verifier, challenge: base64Url(new Uint8Array(digest)) };
 }
 
-export async function registerClient(redirectUris: string[], clientName = "Claude"): Promise<string> {
+export async function registerClient(redirectUris: string[], clientName = "Claude", requestOrigin = PUBLIC_URL): Promise<string> {
   const response = await workerFetch("/register", {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -92,7 +93,7 @@ export async function registerClient(redirectUris: string[], clientName = "Claud
       response_types: ["code"],
       token_endpoint_auth_method: "none",
     }),
-  });
+  }, requestOrigin);
   const text = await response.text();
   if (!response.ok) throw new Error(`register ${response.status} ${text}`);
   const body = JSON.parse(text) as { client_id?: string };
@@ -100,14 +101,14 @@ export async function registerClient(redirectUris: string[], clientName = "Claud
   return body.client_id;
 }
 
-export async function authorizeUrl(clientId: string, redirectUri: string, challenge: string): Promise<string> {
+export async function authorizeUrl(clientId: string, redirectUri: string, challenge: string, resourceOrigin = PUBLIC_URL): Promise<string> {
   const params = new URLSearchParams({
     response_type: "code",
     client_id: clientId,
     redirect_uri: redirectUri,
     code_challenge: challenge,
     code_challenge_method: "S256",
-    resource: `${PUBLIC_URL}/mcp`,
+    resource: `${resourceOrigin}/mcp`,
     state: "client-state",
   });
   return `/authorize?${params.toString()}`;
@@ -122,33 +123,43 @@ export interface ApprovedLogin {
   redirectUri: string;
   pageHtml: string;
   stateCookie: string;
+  requestOrigin: string;
+  resourceOrigin: string;
+}
+
+export interface RequestTarget {
+  requestOrigin?: string;
+  resourceOrigin?: string;
 }
 
 export async function approveLogin(
   redirectUri = CLAUDE_REDIRECT,
   shared?: { jar: CookieJar; clientId: string },
+  target: RequestTarget = {},
 ): Promise<ApprovedLogin> {
-  const clientId = shared?.clientId ?? (await registerClient([redirectUri]));
+  const requestOrigin = target.requestOrigin ?? PUBLIC_URL;
+  const resourceOrigin = target.resourceOrigin ?? requestOrigin;
+  const clientId = shared?.clientId ?? (await registerClient([redirectUri], "Claude", requestOrigin));
   const { verifier, challenge } = await clientPkce();
   const jar = shared?.jar ?? new CookieJar();
-  const page = await workerFetch(await authorizeUrl(clientId, redirectUri, challenge), { headers: { cookie: jar.header() } });
+  const page = await workerFetch(await authorizeUrl(clientId, redirectUri, challenge, resourceOrigin), { headers: { cookie: jar.header() } }, requestOrigin);
   jar.absorb(page);
   const pageHtml = await page.text();
-  if (page.status !== 200) throw new Error(`authorize page ${page.status} ${pageHtml.slice(0, 300)}`);
+  if (page.status !== 200) throw new Error(`authorize page ${page.status} ${page.headers.get("location") ?? ""} ${pageHtml.slice(0, 300)}`);
   const handle = /name="handle" value="([^"]+)"/.exec(pageHtml)?.[1];
   if (!handle) throw new Error(`approval page missing handle ${pageHtml.slice(0, 300)}`);
   const approved = await workerFetch("/authorize", {
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded", cookie: jar.header() },
     body: new URLSearchParams({ handle, decision: "approve" }).toString(),
-  });
+  }, requestOrigin);
   jar.absorb(approved);
   const location = approved.headers.get("location");
   if (approved.status !== 302 || !location) {
     throw new Error(`approve ${approved.status} ${location ?? ""} ${await approved.text()}`);
   }
   const stateCookie = approved.headers.getSetCookie().find((cookie) => cookie.includes("feishu-state")) ?? "";
-  return { clientId, verifier, challenge, jar, feishu: new URL(location), redirectUri, pageHtml, stateCookie };
+  return { clientId, verifier, challenge, jar, feishu: new URL(location), redirectUri, pageHtml, stateCookie, requestOrigin, resourceOrigin };
 }
 
 export async function finishLogin(approved: ApprovedLogin, code = "auth-code"): Promise<{ accessToken: string; callbackLocation: string }> {
@@ -156,7 +167,7 @@ export async function finishLogin(approved: ApprovedLogin, code = "auth-code"): 
   if (!state) throw new Error("feishu redirect missing state");
   const callback = await workerFetch(`/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`, {
     headers: { cookie: approved.jar.header() },
-  });
+  }, approved.requestOrigin);
   const callbackLocation = callback.headers.get("location");
   if (callback.status !== 302 || !callbackLocation) {
     throw new Error(`callback ${callback.status} ${callbackLocation ?? ""} ${await callback.text()}`);
@@ -173,9 +184,9 @@ export async function finishLogin(approved: ApprovedLogin, code = "auth-code"): 
       redirect_uri: approved.redirectUri,
       client_id: approved.clientId,
       code_verifier: approved.verifier,
-      resource: `${PUBLIC_URL}/mcp`,
+      resource: `${approved.resourceOrigin}/mcp`,
     }).toString(),
-  });
+  }, approved.requestOrigin);
   const text = await token.text();
   const body = JSON.parse(text) as { access_token?: string };
   if (!body.access_token) throw new Error(`token ${token.status} ${text}`);

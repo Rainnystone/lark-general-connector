@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "tsc --noEmit && tsc --noEmit -p test && node --test scripts/check-no-secrets.test.mjs && node scripts/check-no-secrets.mjs && vitest run",
+    "test": "tsc --noEmit && tsc --noEmit -p test && node --test scripts/check-no-secrets.test.mjs scripts/deploy-config.test.mjs && node scripts/check-no-secrets.mjs && vitest run",
+    "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit && tsc --noEmit -p test",
     "cf-typegen": "wrangler types"
   },
@@ -20,5 +21,30 @@
     "typescript": "5.9.3",
     "vitest": "4.1.11",
     "wrangler": "4.148.0"
+  },
+  "cloudflare": {
+    "bindings": {
+      "FEISHU_APP_ID": {
+        "description": "飞书或 Lark 应用的 App ID，在开放平台「凭证与基础信息」页面。 Feishu or Lark App ID from the app's Credentials and Basic Info page."
+      },
+      "FEISHU_APP_SECRET": {
+        "description": "飞书或 Lark 应用的 App Secret，与 App ID 在同一凭证页面。 Feishu or Lark App Secret from the same Credentials page."
+      },
+      "COOKIE_SECRET": {
+        "description": "用 `openssl rand -hex 32` 生成的随机字符串，用来签名登录 cookie。 A random string from `openssl rand -hex 32`, used to sign the login cookie."
+      },
+      "OWNER_OPEN_ID": {
+        "description": "先填 pending。第一次登录会被拒绝，页面只显示你自己的 open_id；把那个值填到这里之后才能连接。 Start with pending. The first login is denied and the page shows only your open_id; paste that value here before anyone can connect."
+      },
+      "FEISHU_REGION": {
+        "description": "feishu（飞书中国，默认）或 lark（Lark 国际）。其他值会拒绝全部请求。 feishu (Feishu China, the default) or lark (Lark international). Any other value rejects every request."
+      },
+      "PUBLIC_URL": {
+        "description": "留空则使用本次请求自己的源。要固定自定义域名时再填写完整源，例如 https://connector.example。 Leave empty to use the request's own origin. Set a full origin only to pin a custom domain, for example https://connector.example."
+      },
+      "ALLOWED_REDIRECT_URIS": {
+        "description": "允许的 OAuth 回调地址，逗号分隔。默认包含 Claude 和 ChatGPT，其他客户端把回调追加在后面。 Comma-separated allowed OAuth redirect URIs. The default includes Claude and ChatGPT; append other clients."
+      }
+    }
   }
 }
