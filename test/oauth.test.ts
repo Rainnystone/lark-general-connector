@@ -199,6 +199,50 @@ describe("oauth", () => {
     expect((await env.FEISHU_TOKENS.getByName("ou_bootstrap").status()).stored).toBe(false);
   });
 
+  it("logs in a redirect appended to the allowlist and accepts that origin on /mcp", async () => {
+    const previous = env.ALLOWED_REDIRECT_URIS;
+    env.ALLOWED_REDIRECT_URIS = `${previous},https://client.example/cb`;
+    try {
+      const redirect = "https://client.example/cb";
+      const clientId = await registerClient([redirect], "Example");
+      const approved = await approveLogin(redirect, { jar: new CookieJar(), clientId });
+      const done = await finishLogin(approved);
+      expect(new URL(done.callbackLocation).origin).toBe("https://client.example");
+      const accepted = await postInitialize(done.accessToken, "https://client.example");
+      expect(accepted.status).toBe(200);
+      const claude = await postInitialize(done.accessToken, "https://claude.ai");
+      expect(claude.status).toBe(200);
+      const chatgpt = await postInitialize(done.accessToken, "https://chatgpt.com");
+      expect(chatgpt.status).toBe(200);
+      const local = await postInitialize(done.accessToken, "http://localhost:8787");
+      expect(local.status).toBe(200);
+    } finally {
+      env.ALLOWED_REDIRECT_URIS = previous;
+    }
+  });
+
+  it("refuses an origin whose hostname is not in the redirect allowlist", async () => {
+    const previous = env.ALLOWED_REDIRECT_URIS;
+    env.ALLOWED_REDIRECT_URIS = `${previous},https://client.example/cb,https://user:pass@evil.example/cb,https://evil.example/cb#frag`;
+    try {
+      const approved = await approveLogin();
+      const done = await finishLogin(approved);
+      const refused = [
+        ["https://other.example", "other.example"],
+        ["https://evil.example", "evil.example"],
+        ["https://www.client.example", "www.client.example"],
+        ["http://127.0.0.1:8787", "127.0.0.1"],
+      ] as const;
+      for (const [origin, hostname] of refused) {
+        const rejected = await postInitialize(done.accessToken, origin);
+        expect(rejected.status).toBe(403);
+        expect(await rejected.text()).toContain(`Invalid Origin: ${hostname}`);
+      }
+    } finally {
+      env.ALLOWED_REDIRECT_URIS = previous;
+    }
+  });
+
   it("answers a dead refresh token with invalid_grant", async () => {
     const clientId = await registerClient([CLAUDE_REDIRECT]);
     const response = await workerFetch("/token", {
@@ -210,6 +254,24 @@ describe("oauth", () => {
     expect(body.error).toBe("invalid_grant");
   });
 });
+
+function postInitialize(token: string, origin: string): Promise<Response> {
+  return workerFetch("/mcp", {
+    method: "POST",
+    headers: {
+      accept: "application/json, text/event-stream",
+      "content-type": "application/json",
+      authorization: `Bearer ${token}`,
+      origin,
+    },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "initialize",
+      params: { protocolVersion: "2025-03-26", capabilities: {}, clientInfo: { name: "vitest", version: "0" } },
+    }),
+  });
+}
 
 function viSpy(logs: string[]) {
   const spy = consoleSpy();

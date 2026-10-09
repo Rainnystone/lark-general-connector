@@ -1,3 +1,21 @@
+export function corsOriginHostnames(publicUrl: string, allowlist: string): string[] {
+  const hosts = new Set<string>(["localhost", new URL(publicUrl).hostname]);
+  for (const entry of allowlist.split(",")) {
+    const trimmed = entry.trim();
+    if (trimmed.length === 0) continue;
+    let parsed: URL;
+    try {
+      parsed = new URL(trimmed);
+    } catch {
+      continue;
+    }
+    if (parsed.username !== "" || parsed.password !== "" || parsed.hash !== "") continue;
+    if (parsed.hostname === "") continue;
+    hosts.add(parsed.hostname);
+  }
+  return [...hosts];
+}
+
 export function isRedirectAllowed(uri: string, allowlist: string): boolean {
   let parsed: URL;
   try {

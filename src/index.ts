@@ -8,7 +8,7 @@ import { isDisabled } from "./flags";
 import { parseFeishuRegion } from "./feishu/client";
 import { createFeishuServer, SERVER_INSTRUCTIONS } from "./mcp/server";
 import { requestContext } from "./request-store";
-import { registrationDecision } from "./redirects";
+import { corsOriginHostnames, registrationDecision } from "./redirects";
 import { FeishuTokenStore } from "./tokens/store";
 
 const YEAR_SECONDS = 365 * 24 * 60 * 60;
@@ -35,11 +35,6 @@ function propsOpenId(props: unknown): string | null {
   return typeof openId === "string" && openId.length > 0 ? openId : null;
 }
 
-function originHostnames(publicUrl: string): string[] {
-  const host = new URL(publicUrl).hostname;
-  return ["claude.ai", "www.claude.ai", "chatgpt.com", "www.chatgpt.com", host, "localhost", "127.0.0.1"];
-}
-
 function disabledMcp(): Response {
   return new Response(
     JSON.stringify({
@@ -62,7 +57,7 @@ function getProvider(env: Env, publicUrl: string): OAuthProvider<Env> {
       if (!stored) return createFeishuServer(env, "");
       return createFeishuServer(stored.env, stored.openId);
     },
-    { route: "/mcp", allowedOriginHostnames: originHostnames(publicUrl) },
+    { route: "/mcp", allowedOriginHostnames: corsOriginHostnames(publicUrl, allowlist) },
   );
   const provider = new OAuthProvider<Env>({
     apiRoute: "/mcp",
