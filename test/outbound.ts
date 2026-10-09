@@ -42,9 +42,23 @@ async function feishuResponse(request: Request, url: URL): Promise<Response> {
   return new Response("unexpected feishu request", { status: 404 });
 }
 
-/** Miniflare outbound stand-in for Feishu. Other hosts keep the real network. */
+function canonicalHost(hostname: string): string {
+  switch (hostname) {
+    case "open.larksuite.com":
+      return "open.feishu.cn";
+    case "accounts.larksuite.com":
+      return "accounts.feishu.cn";
+    case "mcp.larksuite.com":
+      return "mcp.feishu.cn";
+    default:
+      return hostname;
+  }
+}
+
+/** Miniflare outbound stand-in for Feishu and Lark. Other hosts keep the real network. */
 export async function feishuOutbound(request: Request): Promise<Response> {
   const url = new URL(request.url);
+  url.hostname = canonicalHost(url.hostname);
   if (url.hostname === "accounts.feishu.cn" || url.hostname === "open.feishu.cn" || url.hostname === "mcp.feishu.cn") {
     return feishuResponse(request, url);
   }

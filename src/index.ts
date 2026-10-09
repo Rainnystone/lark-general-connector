@@ -5,6 +5,7 @@ import { handleAuth } from "./auth/handler";
 import { disabledPage } from "./auth/pages";
 import type { Env } from "./env";
 import { isDisabled } from "./flags";
+import { parseFeishuRegion } from "./feishu/client";
 import { createFeishuServer, SERVER_INSTRUCTIONS } from "./mcp/server";
 import { requestContext } from "./request-store";
 import { registrationDecision } from "./redirects";
@@ -88,6 +89,14 @@ function getProvider(env: Env): OAuthProvider<Env> {
   return provider;
 }
 
+function invalidRegionResponse(): Response {
+  audit({ event: "invalid_region" });
+  return new Response("invalid FEISHU_REGION", {
+    status: 503,
+    headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
+  });
+}
+
 function killSwitchResponse(request: Request): Response {
   audit({ event: "killswitch_block" });
   const path = new URL(request.url).pathname;
@@ -97,6 +106,7 @@ function killSwitchResponse(request: Request): Response {
 
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    if (parseFeishuRegion(env.FEISHU_REGION) === null) return invalidRegionResponse();
     const path = new URL(request.url).pathname;
     if (isDisabled(env.MCP_DISABLED) && (path === "/mcp" || path === "/authorize" || path === "/callback")) {
       return killSwitchResponse(request);

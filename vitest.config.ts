@@ -13,6 +13,7 @@ export default defineConfig({
           FEISHU_APP_SECRET: "test-app-secret",
           OWNER_OPEN_ID: "ou_owner",
           COOKIE_SECRET: "test-cookie-secret-32-characters-min",
+          FEISHU_REGION: "feishu",
           MCP_DISABLED: "0",
           TOOL_BACKENDS: "",
         },

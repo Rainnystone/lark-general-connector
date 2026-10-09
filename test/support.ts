@@ -11,6 +11,7 @@ export function restoreEnv(): void {
   env.FEISHU_APP_SECRET = "test-app-secret";
   env.OWNER_OPEN_ID = "ou_owner";
   env.COOKIE_SECRET = "test-cookie-secret-32-characters-min";
+  env.FEISHU_REGION = "feishu";
   env.MCP_DISABLED = "0";
   env.TOOL_BACKENDS = "";
   env.P2P_DISCOVERY = "";

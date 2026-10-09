@@ -54,7 +54,7 @@ export class FakeFeishu {
   async handle(input: RequestInfo | URL, init: RequestInit | undefined, original: typeof fetch): Promise<Response> {
     const urlString = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
     const url = new URL(urlString);
-    if (!url.hostname.endsWith("feishu.cn")) return original(input, init);
+    if (!url.hostname.endsWith("feishu.cn") && !url.hostname.endsWith("larksuite.com")) return original(input, init);
     const method = (init?.method ?? "GET").toUpperCase();
     const body = typeof init?.body === "string" ? init.body : "";
     const headers = new Headers(init?.headers);

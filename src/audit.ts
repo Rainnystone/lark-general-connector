@@ -12,6 +12,7 @@ export type AuditRecord =
   | { event: "token_refresh"; ok: boolean; code: string }
   | { event: "reauth_required"; code: string }
   | { event: "killswitch_block" }
+  | { event: "invalid_region" }
   | { event: "tool_backends_invalid" };
 
 export function audit(record: AuditRecord): void {

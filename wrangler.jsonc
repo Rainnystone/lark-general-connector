@@ -15,6 +15,7 @@
     "traces": { "enabled": true, "head_sampling_rate": 1 }
   },
   "vars": {
+    "FEISHU_REGION": "feishu",
     "PUBLIC_URL": "https://example.workers.dev",
     "ALLOWED_REDIRECT_URIS": "https://claude.ai/api/mcp/auth_callback,https://chatgpt.com/connector_platform_oauth_redirect,https://chatgpt.com/connector/oauth/"
   },

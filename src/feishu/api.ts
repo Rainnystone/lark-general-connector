@@ -1,4 +1,4 @@
-import { FeishuClient } from "./client";
+import { FeishuClient, currentFeishuRegion, rewriteUrlForRegion } from "./client";
 
 export const FEISHU_AUTHORIZE_URL = "https://accounts.feishu.cn/open-apis/authen/v1/authorize";
 export const FEISHU_TOKEN_URL = "https://accounts.feishu.cn/oauth/v3/token";
@@ -18,7 +18,7 @@ export function feishuAuthorizeUrl(input: {
   url.searchParams.set("redirect_uri", input.redirectUri);
   url.searchParams.set("scope", input.scope);
   url.searchParams.set("state", input.state);
-  return url.toString();
+  return rewriteUrlForRegion(url.toString(), currentFeishuRegion());
 }
 
 export interface FeishuAccess {

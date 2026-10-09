@@ -7,6 +7,7 @@ declare global {
       FEISHU_APP_SECRET: string;
       COOKIE_SECRET: string;
       OWNER_OPEN_ID: string;
+      FEISHU_REGION: string;
       MCP_DISABLED: string;
       TOOL_BACKENDS: string;
       P2P_DISCOVERY: string;
