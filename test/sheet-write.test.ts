@@ -27,8 +27,9 @@ describe("write_sheet", () => {
   it("describes formula cells and is not read-only", async () => {
     const { accessToken } = await login();
     const tool = (await listTools(accessToken)).find((entry) => entry.name === "write_sheet");
-    const annotations = tool?.annotations as { readOnlyHint?: boolean };
+    const annotations = tool?.annotations as { readOnlyHint?: boolean; destructiveHint?: boolean };
     expect(annotations.readOnlyHint).toBe(false);
+    expect(annotations.destructiveHint).toBe(true);
     const description = String(tool?.description);
     expect(description).toContain('plain string "=..." is stored as text');
     expect(description).toContain('{type:"formula",text}');

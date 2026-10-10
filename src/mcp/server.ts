@@ -185,7 +185,7 @@ export function createFeishuServer(env: Env, openId: string): McpServer {
       title: "Write a Feishu sheet",
       description:
         'Create or write a Feishu sheet from a URL, wiki node token, or sheet token. action create uses title and optional folder_token (default root). put overwrites range sheetId!A1:C2. append uses insert_data_option INSERT_ROWS or OVERWRITE. batch_update writes value_ranges. Cell values are forwarded as-is. A plain string "=..." is stored as text; formulas need {type:"formula",text}.',
-      annotations: writing,
+      annotations: destructive,
       inputSchema: z.object({
         action: z.enum(WRITE_SHEET_ACTIONS),
         doc: z.string().optional(),

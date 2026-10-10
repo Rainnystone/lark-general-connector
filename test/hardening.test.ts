@@ -22,7 +22,7 @@ const CATALOGUE = [
   { name: "search_users", title: "Search colleagues", readOnly: true, destructive: false },
   { name: "fetch_doc_media", title: "Fetch doc image/whiteboard", readOnly: true, destructive: false },
   { name: "read_sheet", title: "Read a Feishu sheet", readOnly: true, destructive: false },
-  { name: "write_sheet", title: "Write a Feishu sheet", readOnly: false, destructive: false },
+  { name: "write_sheet", title: "Write a Feishu sheet", readOnly: false, destructive: true },
   { name: "read_bitable", title: "Read a Feishu Base", readOnly: true, destructive: false },
   { name: "write_bitable", title: "Write a Feishu Base", readOnly: false, destructive: true },
   { name: "read_slides", title: "Read a Feishu slides deck", readOnly: true, destructive: false },
