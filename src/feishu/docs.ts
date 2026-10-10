@@ -78,24 +78,39 @@ export async function feishuOpen(client: FeishuClient, method: string, url: stri
 export interface DocRef {
   kind: "wiki" | "token";
   token: string;
+  objType: string;
 }
+
+const URL_OBJ_TYPE = [
+  ["docx", "docx"],
+  ["docs", "docx"],
+  ["doc", "docx"],
+  ["sheets", "sheet"],
+  ["base", "bitable"],
+  ["slides", "slides"],
+  ["file", "file"],
+  ["mindnotes", "mindnote"],
+] as const;
 
 export function parseDocRef(doc: string): DocRef {
   const trimmed = doc.trim();
   try {
     const url = new URL(trimmed);
-    if (url.protocol !== "http:" && url.protocol !== "https:") return { kind: "token", token: trimmed };
+    if (url.protocol !== "http:" && url.protocol !== "https:") return { kind: "token", token: trimmed, objType: "docx" };
     const parts = url.pathname.split("/").filter((part) => part.length > 0);
     const wikiAt = parts.indexOf("wiki");
     const wikiToken = parts[wikiAt + 1];
-    if (wikiAt >= 0 && wikiToken) return { kind: "wiki", token: decodeURIComponent(wikiToken) };
-    const docAt = parts.findIndex((part) => part === "docx" || part === "docs" || part === "doc");
-    const docToken = parts[docAt + 1];
-    if (docAt >= 0 && docToken) return { kind: "token", token: decodeURIComponent(docToken) };
+    if (wikiAt >= 0 && wikiToken) return { kind: "wiki", token: decodeURIComponent(wikiToken), objType: "" };
+    for (const [segment, objType] of URL_OBJ_TYPE) {
+      const at = parts.indexOf(segment);
+      const raw = parts[at + 1];
+      if (at < 0 || !raw) continue;
+      return { kind: "token", token: decodeURIComponent(raw), objType };
+    }
   } catch {
-    return { kind: "token", token: trimmed };
+    return { kind: "token", token: trimmed, objType: "docx" };
   }
-  return { kind: "token", token: trimmed };
+  return { kind: "token", token: trimmed, objType: "docx" };
 }
 
 export function wikiNodeUrl(token: string): string {
@@ -108,7 +123,7 @@ export function wikiNodeUrl(token: string): string {
 export const WIKI_NODE_MISSING = 131005;
 
 export type ResolvedDoc =
-  | { ok: true; token: string; objType: string }
+  | { ok: true; token: string; objType: string; wikiNode: boolean }
   | { ok: false; reason: "empty" }
   | { ok: false; reason: "open"; payload: OpenPayload };
 
@@ -128,21 +143,22 @@ export function resolvesWikiNode(doc: string): boolean {
 }
 
 /**
- * A doc URL uses the path token as docx. A wiki URL and a bare token go
- * through get_node with no obj_type. Code 0 uses the node's obj_token and
- * obj_type. A bare token that is not a wiki node (131005) is a drive docx.
- * A wiki URL that misses stays an error.
+ * A typed drive URL uses the path token and that type. A wiki URL and a bare
+ * token go through get_node with no obj_type. Code 0 uses the node's obj_token
+ * and obj_type (`wikiNode: true`). A bare token that is not a wiki node (131005)
+ * is a drive object (`wikiNode: false`, objType docx for fetch_doc). A wiki
+ * URL that misses stays an error.
  */
 export async function resolveDoc(doc: string, loadNode: (url: string) => Promise<OpenPayload>): Promise<ResolvedDoc> {
   const ref = parseDocRef(doc);
-  if (!resolvesWikiNode(doc)) return { ok: true, token: ref.token, objType: "docx" };
+  if (!resolvesWikiNode(doc)) return { ok: true, token: ref.token, objType: ref.objType, wikiNode: false };
   const node = await loadNode(wikiNodeUrl(ref.token));
   if (node.status === 429 || node.parsed === false) return { ok: false, reason: "open", payload: node };
-  if (ref.kind === "token" && node.code === WIKI_NODE_MISSING) return { ok: true, token: ref.token, objType: "docx" };
+  if (ref.kind === "token" && node.code === WIKI_NODE_MISSING) return { ok: true, token: ref.token, objType: "docx", wikiNode: false };
   if (node.code !== 0) return { ok: false, reason: "open", payload: node };
   const fields = wikiNodeFields(node.data);
   if (fields.objToken.length === 0) return { ok: false, reason: "empty" };
-  return { ok: true, token: fields.objToken, objType: fields.objType };
+  return { ok: true, token: fields.objToken, objType: fields.objType, wikiNode: true };
 }
 
 export function wikiNodeFields(data: Record<string, unknown>): { objToken: string; objType: string; spaceId: string } {

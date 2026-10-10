@@ -1,0 +1,19 @@
+{
+  "data": {
+    "revision": 1,
+    "spreadsheetToken": "shtcnEXAMPLE",
+    "valueRange": {
+      "majorDimension": "ROWS",
+      "range": "shtEx1!A1:F6",
+      "revision": 1,
+      "values": [
+        ["Name", "Status", "Notes", null, null, null],
+        ["Ada", "done", "example", null, null, null],
+        ["Bea", "open", "example", null, null, null],
+        ["Cal", "done", "example", null, null, null],
+        ["Deb", "open", "example", null, null, null],
+        ["Eli", "done", "example", null, null, null]
+      ]
+    }
+  }
+}

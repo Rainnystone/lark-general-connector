@@ -85,7 +85,7 @@ describe("oauth", () => {
     expect(approved.feishu.searchParams.get("state")).toBeTruthy();
     const scope = approved.feishu.searchParams.get("scope")?.split(" ") ?? [];
     expect(new Set(scope)).toEqual(new Set(SPEC_SCOPES));
-    expect(scope).toHaveLength(25);
+    expect(scope).toHaveLength(48);
   });
 
   it("completes two overlapping Feishu logins from the same browser", async () => {

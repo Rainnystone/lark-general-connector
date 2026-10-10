@@ -7,6 +7,7 @@ import { callGetUser, callSearchUsers } from "./contacts";
 import { callFetchDocMedia } from "./doc-media";
 import { callFetchDoc, callGetDocComments, callListWikiDocs, callSearchDocs } from "./doc-read";
 import { callDeleteDoc } from "./doc-delete";
+import { callReadSheet, SHEET_ACTIONS, VALUE_RENDER_OPTIONS } from "./doc-sheet";
 import { callAddDocComment, callCreateDoc, callUpdateDoc, UPDATE_DOC_MODES } from "./doc-write";
 import { callWhoami } from "./tools";
 
@@ -155,6 +156,22 @@ export function createFeishuServer(env: Env, openId: string): McpServer {
       }),
     },
     async (args) => callSearchUsers(env, openId, args),
+  );
+  server.registerTool(
+    "read_sheet",
+    {
+      title: "Read a Feishu sheet",
+      description:
+        "Read a Feishu sheet from a URL, wiki node token, or sheet token. Call action meta first to get sheet_id. action values reads range sheetId!A1:C2. Use value_render_option FormattedValue (or UnformattedValue) to get computed values; ToString (default) returns the formula text. Formula returns the formula itself.",
+      annotations: readOnly,
+      inputSchema: z.object({
+        doc: z.string(),
+        action: z.enum(SHEET_ACTIONS),
+        range: z.string().optional(),
+        value_render_option: z.enum(VALUE_RENDER_OPTIONS).optional(),
+      }),
+    },
+    async (args) => callReadSheet(env, openId, args),
   );
   server.registerTool(
     "fetch_doc_media",

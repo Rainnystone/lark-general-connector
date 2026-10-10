@@ -1,0 +1,40 @@
+{
+  "data": {
+    "sheets": [
+      {
+        "grid_properties": {
+          "column_count": 20,
+          "frozen_column_count": 0,
+          "frozen_row_count": 0,
+          "row_count": 199
+        },
+        "hidden": false,
+        "index": 0,
+        "merges": [
+          {
+            "end_column_index": 0,
+            "end_row_index": 21,
+            "start_column_index": 0,
+            "start_row_index": 19
+          }
+        ],
+        "resource_type": "sheet",
+        "sheet_id": "shtEx1",
+        "title": "Weekly summary (example)"
+      },
+      {
+        "grid_properties": {
+          "column_count": 20,
+          "frozen_column_count": 0,
+          "frozen_row_count": 0,
+          "row_count": 200
+        },
+        "hidden": false,
+        "index": 1,
+        "resource_type": "sheet",
+        "sheet_id": "shtEx2",
+        "title": "Release schedule (example)"
+      }
+    ]
+  }
+}
