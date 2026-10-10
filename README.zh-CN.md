@@ -97,7 +97,7 @@ Node.js 可以到 <https://nodejs.org> 下载 LTS 版本。方式 A 和 C 都不
 
 1. 先做完下面[部署步骤](#部署步骤)的第 ① 步，拿到 App ID 和 App Secret。
 
-   > 小提示：电脑上装了 Node.js 的话，也可以在终端运行 `npx @larksuite/cli config init --new --name lark-connector`（Lark 用户在末尾加上 `--brand lark`），按提示确认，用飞书官方的 Lark CLI 创建应用。它会显示 App ID；App Secret 到飞书后台这个应用的 **凭证与基础信息** 页复制。
+   > 小提示：电脑上装了 Node.js 的话，也可以在终端运行 `npx @larksuite/cli config init --new --name lark-connector`（Lark 用户在末尾加上 `--brand lark`），按提示确认，用飞书官方的 Lark CLI 创建应用。结束时它会显示 App ID 和 App Secret；App Secret 也可以在飞书后台这个应用的 **凭证与基础信息** 页找到。
 2. 点这个按钮：
 
    [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Rainnystone/lark-general-connector)
@@ -178,7 +178,7 @@ Node.js 可以到 <https://nodejs.org> 下载 LTS 版本。方式 A 和 C 都不
 2. **开机器人能力。** 发布之前，在自建应用里开通机器人能力（Bot）。（在 **添加应用能力** 里找到"机器人"并添加。）飞书的消息接口要求开通此能力：不开通的话，读取会话会报错 230006（Bot ability is not activated）。
 3. **发布。** 打开 **版本管理与发布**，创建一个版本并发布。如果你在公司的飞书里，这一步可能需要管理员审批，等审批通过再继续。
 
-> 方式 A，或用 Lark CLI 创建应用时：应用可能已经带了很多权限。**应用身份权限（tenant_access_token）页签下的权限要全部删掉**，连接器一个都不用，而它们只凭 App ID 和 App Secret 就能使用。用户身份权限页签下多出来的权限，每次使用都需要你本人授权，连接器也只会请求上面清单里的那些，删不删都行。方式 A 里 AI 会检查并只告诉你还缺哪几项。
+> 方式 A，或用 Lark CLI 创建应用时：新应用一开始几乎没有权限，上面清单里的要全部开通（方式 A 里 AI 会告诉你还缺哪几项）。另外检查 **应用身份权限（tenant_access_token）** 页签，**里面有的都要删掉**：连接器一个都不用，而它们只凭 App ID 和 App Secret 就能使用。
 
 ### ⑤ 在 Claude 或 ChatGPT 里连接
 

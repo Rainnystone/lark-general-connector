@@ -21,7 +21,7 @@ Every human-only step below has click-by-click instructions under the same numbe
 
 Work inside a copy of this repository: its `package.json` has `"name": "lark-general-connector"`. If the working directory is not one, get it. No GitHub account is needed. With git: `git clone https://github.com/Rainnystone/lark-general-connector.git`, then work in `lark-general-connector`. Without git: download `https://github.com/Rainnystone/lark-general-connector/archive/refs/heads/main.zip`, unzip it, and work in `lark-general-connector-main`.
 
-Check `node --version`. The wizard and the Lark CLI path need Node.js 22.6 or newer. If Node is older or missing, stop and ask the human to install the LTS release from https://nodejs.org.
+Check `node --version` before any other command in this file. The wizard and the Lark CLI path need Node.js 22.6 or newer; older Node fails with `bad option: --experimental-strip-types`. If Node is older or missing, stop and ask the human to install the LTS release from https://nodejs.org.
 
 ## Choose a path
 
@@ -40,8 +40,8 @@ The Lark CLI is https://github.com/larksuite/cli. Below, `lark-cli` means the in
 - **Profile.** Name a Lark CLI profile after the Worker: `<profile>` is `<worker-name>`. Pass `--name <profile>` to `config init` and `--profile <profile>` to every other `lark-cli` command. Without it, Lark CLI acts on the human's default profile, which may be a different app. Never run `config remove`, and never run `config init` without `--name`.
 - **Browser confirmations.** `config init --new` and `auth login` wait for the human to confirm in the browser. Run `config init --new` in the background and read the verification URL from its output. Run `auth login` with `--no-wait --json`, then `--device-code` once the human confirms. Give the human each URL verbatim. If `config init` refuses because it runs inside an agent workspace (`OPENCLAW_HOME` or `HERMES_HOME`), take the fallback; do not pass `--force-init` or run `config bind`.
 - **Narrow login.** `auth login` without `--scope` requests every scope the app has. Always pass `--scope contact:user.base:readonly`, and run `auth logout` as soon as the open_id is stored.
-- **App Secret.** Lark CLI keeps the App Secret in its own secure storage. Leave it there: nothing in this file reads it. The human copies the App Secret from the console into `wrangler secret put`. If any output ever shows an App Secret, do not repeat it, and tell the human to reset the App Secret in the console after setup.
-- **Preset scopes.** An app created by Lark CLI may already have many scopes enabled. The connector uses no app-identity (tenant) scopes, and those work with the App ID and App Secret alone, with no user consent: the human removes every app-identity scope before publishing. Extra user-identity scopes need the owner's consent at each login, and the connector requests only the Scopes block, so removing those is optional.
+- **App Secret.** `config init` prints the App Secret in its final output. Always run it through `grep --line-buffered -iv secret`, which drops every line naming a secret and still shows the verification URL as it appears. Take the App ID only from `config show`, filtered to the `cli_` id. Nothing in this file reads the App Secret. The human copies the App Secret from the console into `wrangler secret put`. If any output ever shows an App Secret, do not repeat it, and tell the human to reset the App Secret in the console after setup.
+- **Preset scopes.** A new Lark CLI app starts with almost no user-identity scopes, so expect to print most of the Scopes block. The connector uses no app-identity (tenant) scopes, and those work with the App ID and App Secret alone, with no user consent: the human removes every app-identity scope before publishing.
 
 ## Deploy
 
@@ -69,7 +69,7 @@ Send each secret on stdin, not as a command argument. Do not use `--secrets-file
 
 ### 1. Create the app
 
-Lark CLI path: run `lark-cli config init --new --name <profile> --brand feishu` in the background. Give the human the verification URL from its output. Stop. Wait for the human. When it exits 0, take the App ID (`cli_` plus letters and digits) from its output, or from `lark-cli --profile <profile> config show`. On failure, take the fallback.
+Lark CLI path: run `lark-cli config init --new --name <profile> --brand feishu 2>&1 | grep --line-buffered -iv secret` in the background. Give the human the verification URL from its output. Stop. Wait for the human. When it finishes, run `lark-cli --profile <profile> config show 2>&1 | grep -o 'cli_[0-9A-Za-z]*' | sort -u`. Exactly one line is the App ID. Anything else, or a failure: take the fallback.
 
 Manual: print the console URL for the chosen region. Stop. Wait for the human. The human creates the custom app in that console. You do not create it.
 

@@ -97,7 +97,7 @@ If an automated step doesn't work, the agent walks you through the manual versio
 
 1. Do step ① of [Setup steps](#setup-steps) first, so you have the App ID and App Secret.
 
-   > Tip: if you have Node.js, you can instead run `npx @larksuite/cli config init --new --name lark-connector` in a terminal (Lark users add `--brand lark`) and confirm the prompt, which creates the app with Feishu's official Lark CLI. It shows the App ID; copy the App Secret from that app's **Credentials & Basic Info** page in the console.
+   > Tip: if you have Node.js, you can instead run `npx @larksuite/cli config init --new --name lark-connector` in a terminal (Lark users add `--brand lark`) and confirm the prompt, which creates the app with Feishu's official Lark CLI. It shows the App ID and the App Secret when it finishes; the App Secret is also on that app's **Credentials & Basic Info** page in the console.
 2. Click this button:
 
    [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Rainnystone/lark-general-connector)
@@ -178,7 +178,7 @@ For example `https://lark-general-connector.<your-subdomain>.workers.dev/callbac
 2. **Bot.** Enable the Bot capability (机器人) on the custom app before publishing. (Find "Bot" under **Add features** (添加应用能力) and add it; English labels may differ.) Feishu's message APIs require this: without it, reading chats fails with error 230006 "Bot ability is not activated".
 3. **Publish.** Open **Version Management & Release**, create a version, and publish it. In a company tenant this may need admin approval; wait until it's approved before you continue.
 
-> Path A, or an app created with Lark CLI: the app may already have many permissions. **Remove every permission under the 应用身份权限 (tenant_access_token) tab**: the connector uses none of them, and they work with the App ID and App Secret alone. Extra permissions under the user-identity tab need your own consent each time they're used, and the connector only requests the ones in the list above, so removing those is optional. On path A the agent checks and tells you only which ones are missing.
+> Path A, or an app created with Lark CLI: a new app starts with almost no permissions, so enable the whole list above (on path A the agent tells you which ones are missing). Also check the 应用身份权限 (tenant_access_token) tab and **remove anything there**: the connector uses none of those, and they work with the App ID and App Secret alone.
 
 ### ⑤ Connect in Claude or ChatGPT
 

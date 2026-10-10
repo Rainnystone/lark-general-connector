@@ -127,5 +127,12 @@ test("Lark CLI login is narrowed to one connector scope and logged out", () => {
     assert.match(command, />\/dev\/null 2>&1$/, command);
   }
   assert.match(body, /removes every app-identity scope before publishing/);
+  for (const command of larkCliCommands(body).filter((line) => line.includes("config init"))) {
+    assert.match(command, /\| grep --line-buffered -iv secret$/, command);
+  }
+  for (const command of larkCliCommands(body).filter((line) => line.includes("config show"))) {
+    assert.match(command, /\| grep -o 'cli_\[0-9A-Za-z\]\*'/, command);
+  }
+  assert.match(body, /Node\.js 22\.6 or newer/);
   assert.match(body, /auth status --json \| node --experimental-strip-types scripts\/owner-open-id\.mjs \| npx wrangler secret put OWNER_OPEN_ID/);
 });
