@@ -16,7 +16,7 @@ import { callAddDocComment, callCreateDoc, callUpdateDoc, UPDATE_DOC_MODES } fro
 import { callWhoami } from "./tools";
 
 export const SERVER_INSTRUCTIONS =
-  "This server acts as the owner in Feishu. It reads and writes the owner's docs. Chats are read-only: it cannot send or change messages. Delete moves one cloud-space docx to the recycle bin only when the exact title is confirmed. Wiki docs are never deleted.";
+  "This server acts as the owner in Feishu. It reads and writes the owner's docs. Chats are read-only: it cannot send or change messages. Delete moves one cloud-space docx, sheet, Base, slides, or file to the recycle bin only when the exact title is confirmed. Wiki docs are never deleted.";
 
 const readOnly = { readOnlyHint: true, destructiveHint: false, openWorldHint: true } as const;
 const writing = { readOnlyHint: false, destructiveHint: false, openWorldHint: true } as const;

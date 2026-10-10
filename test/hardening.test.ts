@@ -63,6 +63,10 @@ describe("server instructions", () => {
     expect(head).toContain("reads and writes");
     expect(head).toMatch(/chats are read-only/i);
     expect(head).toContain("docx");
+    expect(head).toContain("sheet");
+    expect(head).toContain("Base");
+    expect(head).toContain("slides");
+    expect(head).toContain("file");
     expect(head).toContain("recycle bin");
     expect(head).toContain("exact title");
     expect(head).toMatch(/wiki docs are never deleted/i);
