@@ -6,21 +6,20 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { FEISHU_SCOPES } from "../src/scopes.ts";
 
-const text = readFileSync(new URL("../AGENTS.md", import.meta.url), "utf8");
-
-function section(heading) {
-  const start = text.indexOf(heading);
-  assert.notEqual(start, -1, heading);
-  const rest = text.slice(start + heading.length);
-  const next = rest.search(/\n## /);
-  return next === -1 ? rest : rest.slice(0, next);
-}
+const english = readFileSync(new URL("../AGENTS.md", import.meta.url), "utf8");
+const chinese = readFileSync(new URL("../AGENTS.zh-CN.md", import.meta.url), "utf8");
 
 function headings(body) {
   return body
     .split("\n")
     .filter((line) => line.startsWith("### "))
     .map((line) => line.slice(4));
+}
+
+function scopesBlock(text) {
+  const match = text.match(/```scopes\n([\s\S]*?)```/);
+  assert.ok(match, "scopes block");
+  return match[1].replace(/\n$/, "").split("\n");
 }
 
 const englishOrder = [
@@ -45,13 +44,13 @@ const chineseOrder = [
   "8. 重新连接",
 ];
 
-test("English and Chinese sections follow the shared deploy order", () => {
-  assert.deepEqual(headings(section("## English")), englishOrder);
-  assert.deepEqual(headings(section("## 中文")), chineseOrder);
+test("English and 中文 files follow the shared deploy order", () => {
+  assert.deepEqual(headings(english), englishOrder);
+  assert.deepEqual(headings(chinese), chineseOrder);
 });
 
 test("both regions use that order and the mapped console hosts", () => {
-  for (const body of [section("## English"), section("## 中文")]) {
+  for (const body of [english, chinese]) {
     assert.match(body, /same order|都用这一顺序/);
     assert.match(body, /https:\/\/open\.feishu\.cn\/app/);
     assert.match(body, /https:\/\/open\.larksuite\.com\/app/);
@@ -65,8 +64,6 @@ test("both regions use that order and the mapped console hosts", () => {
 });
 
 test("locked rules are explicit in both languages", () => {
-  const english = section("## English");
-  const chinese = section("## 中文");
   assert.match(english, /Never write secrets into files, commits or chat\./);
   assert.match(english, /Never deploy over an existing Worker name without the human's confirmation\./);
   assert.match(english, /Never widen scopes, tools or the endpoint allowlist\./);
@@ -78,24 +75,23 @@ test("locked rules are explicit in both languages", () => {
 });
 
 test("publish tells the human to enable the Bot capability first", () => {
-  assert.match(section("## English"), /enables the Bot capability \(机器人\) on the custom app before publishing/);
-  assert.match(section("## 中文"), /在发布之前，于自建应用开通机器人能力（Bot）/);
-  const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
-  const english = readme.slice(readme.indexOf("## English"), readme.indexOf("## 中文"));
-  const chinese = readme.slice(readme.indexOf("## 中文"));
-  assert.match(english, /Enable the Bot capability \(机器人\) on the custom app before publishing\./);
-  assert.match(chinese, /发布之前，在自建应用里开通机器人能力（Bot）。/);
+  assert.match(english, /enables the Bot capability \(机器人\) on the custom app before publishing/);
+  assert.match(chinese, /在发布之前，于自建应用开通机器人能力（Bot）/);
+  const englishReadme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
+  const chineseReadme = readFileSync(new URL("../README.zh-CN.md", import.meta.url), "utf8");
+  assert.match(englishReadme, /Enable the Bot capability \(机器人\) on the custom app before publishing\./);
+  assert.match(chineseReadme, /发布之前，在自建应用里开通机器人能力（Bot）。/);
 });
 
 test("human-only steps tell the agent to wait", () => {
-  const englishWaits = section("## English").match(/Stop\. Wait for the human\./g) ?? [];
-  const chineseWaits = section("## 中文").match(/停下来。等人类完成。/g) ?? [];
+  const englishWaits = english.match(/Stop\. Wait for the human\./g) ?? [];
+  const chineseWaits = chinese.match(/停下来。等人类完成。/g) ?? [];
   assert.ok(englishWaits.length >= 5, `english waits ${englishWaits.length}`);
   assert.ok(chineseWaits.length >= 5, `chinese waits ${chineseWaits.length}`);
 });
 
 test("the wizard and the equivalent wrangler commands are both written down", () => {
-  for (const body of [section("## English"), section("## 中文")]) {
+  for (const body of [english, chinese]) {
     assert.match(body, /npm run setup/);
     assert.match(body, /wrangler login/);
     assert.match(body, /deployments list --name/);
@@ -116,7 +112,6 @@ test("the wizard and the equivalent wrangler commands are both written down", ()
 });
 
 test("the scope block is exactly FEISHU_SCOPES", () => {
-  const match = text.match(/```scopes\n([\s\S]*?)```/);
-  assert.ok(match, "scopes block");
-  assert.deepEqual(match[1].replace(/\n$/, "").split("\n"), [...FEISHU_SCOPES]);
+  assert.deepEqual(scopesBlock(english), [...FEISHU_SCOPES]);
+  assert.deepEqual(scopesBlock(chinese), [...FEISHU_SCOPES]);
 });

@@ -127,7 +127,7 @@ export async function runSetup({ io, run, bytes } = {}) {
 
   const regionAnswer = await askUntil(
     io,
-    "区域 Region：输入 feishu（飞书中国，直接回车默认）或 lark（Lark 国际）。\nEnter feishu (Feishu China; press enter for the default) or lark (Lark international).",
+    "区域 Region：输入 feishu（飞书，直接回车默认）或 lark（Lark）。\nEnter feishu (Feishu; press enter for the default) or lark (Lark).",
     (value) => value === "" || parseFeishuRegion(value) !== null,
   );
   const region = regionAnswer === "" ? "feishu" : regionAnswer;
