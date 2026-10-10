@@ -123,8 +123,8 @@
 
 ### ④ 开通权限、开机器人能力、发布应用
 
-1. **开通权限。** 打开 **权限管理**，把[权限清单](#权限清单)里的每一项都开通，**不多开也不少开**。如果控制台让你选身份，选 **用户身份**。
-2. **开机器人能力。** 发布之前，在自建应用里开通机器人能力（Bot）。（在 **添加应用能力** 里找到"机器人"并添加。）
+1. **开通权限。** 打开 **权限管理**，点击 **开通权限**。先切换到 **用户身份权限（user_access_token）** 页签，再选择权限，把[权限清单](#权限清单)里的每一项都开通，**不多开也不少开**。不要在 应用身份权限（tenant_access_token）下开通。
+2. **开机器人能力。** 发布之前，在自建应用里开通机器人能力（Bot）。（在 **添加应用能力** 里找到"机器人"并添加。）飞书的消息接口要求开通此能力：不开通的话，读取会话会报错 230006（Bot ability is not activated）。
 3. **发布。** 打开 **版本管理与发布**，创建一个版本并发布。如果你在公司的飞书里，这一步可能需要管理员审批，等审批通过再继续。
 
 ### ⑤ 在 Claude 或 ChatGPT 里连接
@@ -185,9 +185,9 @@ cd lark-general-connector && npm ci && npm run setup
 
 > 两家的菜单名称可能随版本调整，大致位置如下。
 
-**Claude**：打开 **设置 → 连接器（Connectors）→ 添加自定义连接器（Add custom connector）**，名称随便填，URL 填 `你的连接器地址/mcp`。
+**Claude**：打开 **Customize → Connectors → + Add → Add custom connector（添加自定义连接器）**，名称随便填，URL 填 `你的连接器地址/mcp`。Team/Enterprise 套餐需要 Owner 先在 **Organization settings → Connectors** 里添加，然后你再点 **Connect**。Free 套餐只能添加一个自定义连接器。
 
-**ChatGPT**：打开 **设置 → 应用与连接器（Apps & Connectors）**，在高级设置里开启**开发者模式**，然后 **创建（Create）** 一个连接器，URL 填 `你的连接器地址/mcp`，认证方式选 **OAuth**。
+**ChatGPT**：打开 **Settings → Apps → Advanced settings**，开启 **Developer mode（开发者模式）**，然后进入 **Apps → Create**。URL 填 `你的连接器地址/mcp`，认证方式选 **OAuth**，点击 **Scan Tools**，再点 **Create**。部分账号显示的是 **Plugins → + → Add custom MCP server**。可用套餐和菜单名称会变化，请以你看到的界面为准。
 
 其他支持 OAuth 远程 MCP 的客户端理论上也能用，但需要先把它的回调地址加进 `ALLOWED_REDIRECT_URIS`（见[技术参考](#配置项)）。目前实测过的只有 Claude 和 ChatGPT。
 

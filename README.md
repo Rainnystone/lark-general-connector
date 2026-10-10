@@ -123,8 +123,8 @@ For example `https://lark-general-connector.<your-subdomain>.workers.dev/callbac
 
 ### ④ Add permissions, enable the bot, publish the app
 
-1. **Permissions.** Open **Permissions & Scopes** and enable every item in the [scope list](#scope-list), **no more and no less**. If the console asks which identity, choose **user identity**.
-2. **Bot.** Enable the Bot capability (机器人) on the custom app before publishing. (Find "Bot" under **Add features** and add it.)
+1. **Permissions.** Open **Permissions & Scopes** (权限管理) and click **开通权限**. Switch to the **用户身份权限 (user_access_token)** tab before selecting scopes, then enable every item in the [scope list](#scope-list), **no more and no less**. Don't enable them under 应用身份权限 (tenant_access_token). (English console labels may differ.)
+2. **Bot.** Enable the Bot capability (机器人) on the custom app before publishing. (Find "Bot" under **Add features** (添加应用能力) and add it; English labels may differ.) Feishu's message APIs require this: without it, reading chats fails with error 230006 "Bot ability is not activated".
 3. **Publish.** Open **Version Management & Release**, create a version, and publish it. In a company tenant this may need admin approval; wait until it's approved before you continue.
 
 ### ⑤ Connect in Claude or ChatGPT
@@ -185,9 +185,9 @@ The wizard prints every prompt in Chinese and English and follows the same ①�
 
 > Menu names may change between versions. This is roughly where to look.
 
-**Claude**: open **Settings → Connectors → Add custom connector**. Any name is fine; set the URL to `your connector URL/mcp`.
+**Claude**: open **Customize → Connectors → + Add → Add custom connector**. Any name is fine; set the URL to `your connector URL/mcp`. On Team/Enterprise, an Owner first adds it under **Organization settings → Connectors**, then you click **Connect**. The Free plan allows one custom connector.
 
-**ChatGPT**: open **Settings → Apps & Connectors**, turn on **Developer mode** under advanced settings, then **Create** a connector with the URL `your connector URL/mcp` and authentication set to **OAuth**.
+**ChatGPT**: open **Settings → Apps → Advanced settings** and turn on **Developer mode**, then go to **Apps → Create**. Enter the URL `your connector URL/mcp`, choose **OAuth**, click **Scan Tools**, then **Create**. Some accounts show **Plugins → + → Add custom MCP server** instead. Plan availability and labels change over time, so check what your ChatGPT UI shows.
 
 Other clients that support OAuth remote MCP should also work, but first add their callback URL to `ALLOWED_REDIRECT_URIS` (see [Configuration](#configuration)). Only Claude and ChatGPT have been tested.
 
