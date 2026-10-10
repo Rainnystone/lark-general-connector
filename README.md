@@ -13,7 +13,6 @@ Once it's set up, you can just say things like this in Claude or ChatGPT:
 
 This is an open-source "connector": you deploy it into **your own** Cloudflare account, and it becomes a small bridge between your AI assistant and your Feishu. No coding required. Follow the steps below, click through, copy and paste. It takes about 30 minutes.
 
-> Works with both Feishu and Lark (Feishu's international edition). Lark is beta: supported, but not yet tested with a real account.
 
 ---
 
