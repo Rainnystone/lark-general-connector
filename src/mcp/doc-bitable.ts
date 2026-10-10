@@ -1,0 +1,159 @@
+import type { CallToolResult } from "@modelcontextprotocol/server";
+import type { Env } from "../env";
+import { FeishuClient } from "../feishu/client";
+import { feishuOpen, parseDocRef, resolveDoc, resolvesWikiNode, type ResolvedDoc } from "../feishu/docs";
+import type { FeishuCall } from "../feishu/mcp-proxy";
+import { fromOpen, runTool } from "./proxied-call";
+
+export const BITABLE_ACTIONS = ["app", "tables", "fields", "records"] as const;
+
+export interface ReadBitableArgs {
+  doc: string;
+  action: (typeof BITABLE_ACTIONS)[number];
+  table_id?: string;
+  page_token?: string;
+  offset?: number;
+  limit?: number;
+  view_id?: string;
+}
+
+const RECORDS_LIMIT_MAX = 200;
+
+const READ_TOOL: Record<string, string> = {
+  docx: "fetch_doc",
+  doc: "fetch_doc",
+  sheet: "read_sheet",
+  bitable: "read_bitable",
+  slides: "read_slides",
+  file: "read_file",
+  mindnote: "read_mindnote",
+};
+
+function typeMismatch(objType: string): FeishuCall {
+  const label = objType.length > 0 ? objType : "unknown";
+  const tool = READ_TOOL[label];
+  return { kind: "done", text: tool ? `this is a ${label}; use ${tool}` : `this is a ${label}`, isError: true };
+}
+
+function unresolvedDoc(resolved: Exclude<ResolvedDoc, { ok: true }>): FeishuCall {
+  switch (resolved.reason) {
+    case "empty":
+      return { kind: "done", text: "Feishu request failed", isError: true };
+    case "open":
+      return fromOpen(resolved.payload, "");
+    default: {
+      const unexpected: never = resolved;
+      return unexpected;
+    }
+  }
+}
+
+function bitablePathToken(doc: string): string | null {
+  try {
+    const url = new URL(doc.trim());
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    const parts = url.pathname.split("/").filter((part) => part.length > 0);
+    const at = parts.indexOf("base");
+    const raw = parts[at + 1];
+    if (at < 0 || !raw) return null;
+    return decodeURIComponent(raw);
+  } catch {
+    return null;
+  }
+}
+
+function appUrl(token: string): string {
+  return `https://open.feishu.cn/open-apis/bitable/v1/apps/${encodeURIComponent(token)}`;
+}
+
+function tablesUrl(token: string, pageToken: string | undefined): string {
+  const url = new URL(`https://open.feishu.cn/open-apis/bitable/v1/apps/${encodeURIComponent(token)}/tables`);
+  if (pageToken && pageToken.length > 0) url.searchParams.set("page_token", pageToken);
+  return url.toString();
+}
+
+function fieldsUrl(token: string, tableId: string, pageToken: string | undefined): string {
+  const url = new URL(
+    `https://open.feishu.cn/open-apis/bitable/v1/apps/${encodeURIComponent(token)}/tables/${encodeURIComponent(tableId)}/fields`,
+  );
+  if (pageToken && pageToken.length > 0) url.searchParams.set("page_token", pageToken);
+  return url.toString();
+}
+
+function sentLimit(limit: number | undefined): number | undefined {
+  if (limit === undefined || !Number.isInteger(limit)) return undefined;
+  return Math.min(limit, RECORDS_LIMIT_MAX);
+}
+
+function sentOffset(offset: number | undefined): number | undefined {
+  if (offset === undefined || !Number.isInteger(offset)) return undefined;
+  return offset;
+}
+
+function recordsUrl(token: string, tableId: string, args: ReadBitableArgs): string {
+  const url = new URL(
+    `https://open.feishu.cn/open-apis/base/v3/bases/${encodeURIComponent(token)}/tables/${encodeURIComponent(tableId)}/records`,
+  );
+  const offset = sentOffset(args.offset);
+  if (offset !== undefined) url.searchParams.set("offset", String(offset));
+  const limit = sentLimit(args.limit);
+  if (limit !== undefined) url.searchParams.set("limit", String(limit));
+  const viewId = args.view_id?.trim() ?? "";
+  if (viewId.length > 0) url.searchParams.set("view_id", viewId);
+  return url.toString();
+}
+
+async function resolveBitable(client: FeishuClient, accessToken: string, doc: string): Promise<{ token: string } | FeishuCall> {
+  const fromPath = bitablePathToken(doc);
+  if (fromPath) return { token: fromPath };
+  const resolved = await resolveDoc(doc, (url) => feishuOpen(client, "GET", url, accessToken));
+  if (!resolved.ok) return unresolvedDoc(resolved);
+  if (resolved.objType === "bitable") return { token: resolved.token };
+  if (!resolved.wikiNode && resolvesWikiNode(doc)) return { token: resolved.token };
+  return typeMismatch(resolved.objType);
+}
+
+function missingTableId(token: string): { target: string; call: FeishuCall } {
+  return { target: token, call: { kind: "done", text: "table_id is required", isError: true } };
+}
+
+async function readBitable(client: FeishuClient, accessToken: string, args: ReadBitableArgs): Promise<{ target: string | null; call: FeishuCall }> {
+  const resolved = await resolveBitable(client, accessToken, args.doc);
+  if ("kind" in resolved) return { target: parseDocRef(args.doc).token, call: resolved };
+  const token = resolved.token;
+  switch (args.action) {
+    case "app": {
+      const result = await feishuOpen(client, "GET", appUrl(token), accessToken);
+      return { target: token, call: fromOpen(result, JSON.stringify(result.data)) };
+    }
+    case "tables": {
+      const result = await feishuOpen(client, "GET", tablesUrl(token, args.page_token), accessToken);
+      return { target: token, call: fromOpen(result, JSON.stringify(result.data)) };
+    }
+    case "fields": {
+      const tableId = args.table_id?.trim() ?? "";
+      if (tableId.length === 0) return missingTableId(token);
+      const result = await feishuOpen(client, "GET", fieldsUrl(token, tableId, args.page_token), accessToken);
+      return { target: token, call: fromOpen(result, JSON.stringify(result.data)) };
+    }
+    case "records": {
+      const tableId = args.table_id?.trim() ?? "";
+      if (tableId.length === 0) return missingTableId(token);
+      const result = await feishuOpen(client, "GET", recordsUrl(token, tableId, args), accessToken);
+      return { target: token, call: fromOpen(result, JSON.stringify(result.data)) };
+    }
+    default: {
+      const unexpected: never = args.action;
+      return { target: token, call: unexpected };
+    }
+  }
+}
+
+export function callReadBitable(env: Env, openId: string, args: ReadBitableArgs): Promise<CallToolResult> {
+  let target: string | null = parseDocRef(args.doc).token;
+  return runTool(env, openId, "read_bitable", () => target, async (client, accessToken) => {
+    const outcome = await readBitable(client, accessToken, args);
+    target = outcome.target;
+    return outcome.call;
+  });
+}

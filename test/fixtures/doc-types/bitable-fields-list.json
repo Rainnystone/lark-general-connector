@@ -1,0 +1,116 @@
+{
+  "code": 0,
+  "data": {
+    "has_more": false,
+    "items": [
+      {
+        "field_id": "fldEx1",
+        "field_name": "Title",
+        "type": 1,
+        "ui_type": "Text",
+        "is_primary": true,
+        "property": null
+      },
+      {
+        "field_id": "fldEx5",
+        "field_name": "Link",
+        "type": 15,
+        "ui_type": "Url",
+        "is_primary": false,
+        "property": null
+      },
+      {
+        "field_id": "fldEx6",
+        "field_name": "Date",
+        "type": 5,
+        "ui_type": "DateTime",
+        "is_primary": false,
+        "property": {
+          "auto_fill": false,
+          "date_formatter": "yyyy-MM-dd HH:mm"
+        }
+      },
+      {
+        "field_id": "fldEx9",
+        "field_name": "Duration",
+        "type": 1,
+        "ui_type": "Text",
+        "is_primary": false,
+        "property": null
+      },
+      {
+        "field_id": "fldEx2",
+        "field_name": "Category",
+        "type": 3,
+        "ui_type": "SingleSelect",
+        "is_primary": false,
+        "property": {
+          "options": [
+            {
+              "color": 29,
+              "id": "optEx1",
+              "name": "Option A"
+            },
+            {
+              "color": 6,
+              "id": "optEx2",
+              "name": "Option B"
+            },
+            {
+              "color": 7,
+              "id": "optEx3",
+              "name": "Option C"
+            }
+          ]
+        }
+      },
+      {
+        "field_id": "fldEx3",
+        "field_name": "Project",
+        "type": 1,
+        "ui_type": "Text",
+        "is_primary": false,
+        "property": null
+      },
+      {
+        "field_id": "fldEx7",
+        "field_name": "Relation",
+        "type": 3,
+        "ui_type": "SingleSelect",
+        "is_primary": false,
+        "property": {
+          "options": [
+            {
+              "color": 0,
+              "id": "optEx4",
+              "name": "Owner"
+            },
+            {
+              "color": 3,
+              "id": "optEx5",
+              "name": "Participant"
+            }
+          ]
+        }
+      },
+      {
+        "field_id": "fldEx4",
+        "field_name": "Summary",
+        "type": 1,
+        "ui_type": "Text",
+        "is_primary": false,
+        "property": null
+      },
+      {
+        "field_id": "fldEx8",
+        "field_name": "Todo",
+        "type": 1,
+        "ui_type": "Text",
+        "is_primary": false,
+        "property": null
+      }
+    ],
+    "page_token": "fldEx8",
+    "total": 9
+  }
+}

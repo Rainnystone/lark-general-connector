@@ -1,0 +1,15 @@
+{
+  "code": 0,
+  "data": {
+    "has_more": false,
+    "items": [
+      {
+        "name": "Weekly summary (example)",
+        "revision": 3,
+        "table_id": "tblEx1"
+      }
+    ],
+    "page_token": "tblEx1",
+    "total": 1
+  }
+}

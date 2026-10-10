@@ -23,6 +23,7 @@ const CATALOGUE = [
   { name: "fetch_doc_media", title: "Fetch doc image/whiteboard", readOnly: true, destructive: false },
   { name: "read_sheet", title: "Read a Feishu sheet", readOnly: true, destructive: false },
   { name: "write_sheet", title: "Write a Feishu sheet", readOnly: false, destructive: false },
+  { name: "read_bitable", title: "Read a Feishu Base", readOnly: true, destructive: false },
   { name: "list_chats", title: "List my chats", readOnly: true, destructive: false },
   { name: "list_chat_messages", title: "Read chat messages", readOnly: true, destructive: false },
   { name: "search_messages", title: "Search my messages", readOnly: true, destructive: false },
@@ -73,6 +74,10 @@ describe("server instructions", () => {
 const ALLOWLIST = [
   "DELETE open.feishu.cn ^/open-apis/drive/v1/files/[^/]+$ type=docx",
   "GET open.feishu.cn ^/open-apis/authen/v1/user_info$",
+  "GET open.feishu.cn ^/open-apis/base/v3/bases/[^/]+/tables/[^/]+/records$",
+  "GET open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+$",
+  "GET open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables$",
+  "GET open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields$",
   "GET open.feishu.cn ^/open-apis/board/v1/whiteboards/[^/]+/nodes$",
   "GET open.feishu.cn ^/open-apis/contact/v3/users/(?!batch$|batch_get_id$|find_by_department$)[^/]+$",
   "GET open.feishu.cn ^/open-apis/contact/v3/users/batch$",

@@ -22,6 +22,10 @@ interface AllowRule {
 const ALLOWED: readonly AllowRule[] = [
   { method: "DELETE", host: "open.feishu.cn", path: "^/open-apis/drive/v1/files/[^/]+$", query: "type=docx" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/authen/v1/user_info$" },
+  { method: "GET", host: "open.feishu.cn", path: "^/open-apis/base/v3/bases/[^/]+/tables/[^/]+/records$" },
+  { method: "GET", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+$" },
+  { method: "GET", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables$" },
+  { method: "GET", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/board/v1/whiteboards/[^/]+/nodes$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/contact/v3/users/(?!batch$|batch_get_id$|find_by_department$)[^/]+$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/contact/v3/users/batch$" },

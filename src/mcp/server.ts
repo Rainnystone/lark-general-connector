@@ -7,6 +7,7 @@ import { callGetUser, callSearchUsers } from "./contacts";
 import { callFetchDocMedia } from "./doc-media";
 import { callFetchDoc, callGetDocComments, callListWikiDocs, callSearchDocs } from "./doc-read";
 import { callDeleteDoc } from "./doc-delete";
+import { BITABLE_ACTIONS, callReadBitable } from "./doc-bitable";
 import { callReadSheet, callWriteSheet, INSERT_DATA_OPTIONS, SHEET_ACTIONS, VALUE_RENDER_OPTIONS, WRITE_SHEET_ACTIONS } from "./doc-sheet";
 import { callAddDocComment, callCreateDoc, callUpdateDoc, UPDATE_DOC_MODES } from "./doc-write";
 import { callWhoami } from "./tools";
@@ -192,6 +193,25 @@ export function createFeishuServer(env: Env, openId: string): McpServer {
       }),
     },
     async (args) => callWriteSheet(env, openId, args),
+  );
+  server.registerTool(
+    "read_bitable",
+    {
+      title: "Read a Feishu Base",
+      description:
+        "Read a Feishu Base (bitable) from a URL, wiki node token, or app token. action app returns app info. action tables and fields pass page_token through. action records reads Base v3 records (offset, limit ≤ 200, optional view_id) in Feishu's columnar shape (fields, field_type_list, record_id_list, data, has_more). table_id is required for fields and records.",
+      annotations: readOnly,
+      inputSchema: z.object({
+        doc: z.string(),
+        action: z.enum(BITABLE_ACTIONS),
+        table_id: z.string().optional(),
+        page_token: z.string().optional(),
+        offset: z.number().int().optional(),
+        limit: z.number().int().optional(),
+        view_id: z.string().optional(),
+      }),
+    },
+    async (args) => callReadBitable(env, openId, args),
   );
   server.registerTool(
     "fetch_doc_media",
