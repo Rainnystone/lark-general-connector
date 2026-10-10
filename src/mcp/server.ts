@@ -22,6 +22,8 @@ const readOnly = { readOnlyHint: true, destructiveHint: false, openWorldHint: tr
 const writing = { readOnlyHint: false, destructiveHint: false, openWorldHint: true } as const;
 const destructive = { readOnlyHint: false, destructiveHint: true, openWorldHint: true } as const;
 const deleteDocAnnotations = { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true } as const;
+const DOC_TYPE_ROUTING =
+  "Only docx content is returned. For sheet use read_sheet, bitable read_bitable, slides read_slides, file read_file, mindnote read_mindnote.";
 
 export function createFeishuServer(env: Env, openId: string): McpServer {
   const server = new McpServer({ name: "lark-general-connector", version: "0.1.0" }, { instructions: SERVER_INSTRUCTIONS });
@@ -53,7 +55,7 @@ export function createFeishuServer(env: Env, openId: string): McpServer {
     {
       title: "Read a Feishu doc",
       description:
-        "Read a Feishu doc from its URL or token. offset and limit count Unicode code points and are passed to Feishu. When limit is omitted or larger than one page, one page that fits the response cap is requested. If more remains, the result includes next_offset.",
+        `Read a Feishu doc from its URL or token. offset and limit count Unicode code points and are passed to Feishu. When limit is omitted or larger than one page, one page that fits the response cap is requested. If more remains, the result includes next_offset. ${DOC_TYPE_ROUTING}`,
       annotations: readOnly,
       inputSchema: z.object({
         doc: z.string(),
@@ -67,7 +69,7 @@ export function createFeishuServer(env: Env, openId: string): McpServer {
     "list_wiki_docs",
     {
       title: "List wiki docs",
-      description: "List docs in a wiki space or under a wiki node.",
+      description: `List docs in a wiki space or under a wiki node. ${DOC_TYPE_ROUTING}`,
       annotations: readOnly,
       inputSchema: z.object({
         space_id: z.string().optional(),
