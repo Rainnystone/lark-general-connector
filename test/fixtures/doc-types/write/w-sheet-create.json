@@ -1,0 +1,10 @@
+{
+  "data": {
+    "spreadsheet": {
+      "folder_token": "fldcnEXAMPLE",
+      "spreadsheet_token": "shtcnEXAMPLE",
+      "title": "Example sheet",
+      "url": "https://example.feishu.cn/sheets/shtcnEXAMPLE"
+    }
+  }
+}

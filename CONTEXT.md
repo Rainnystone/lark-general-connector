@@ -64,11 +64,17 @@ _Avoid_: file
 **Wiki doc**:
 A doc that is a node in a wiki space.
 
+**File inline cap**:
+256 KiB. `read_file` download returns `content_base64` at or under this size, plus `text` for UTF-8 `.md` `.txt` `.csv` `.json`. Larger files return `too_large: true` and no bytes.
+
 **Recycle bin**:
 The drive trash where deleting a cloud-space doc sends it.
 
 **Title confirmation**:
 The argument that must equal the doc's real title before a cloud-space doc can be deleted.
+
+**In-doc delete**:
+Deleting a Base field or record, or a slide page, is a content edit. It needs no title confirmation. It is irreversible.
 
 **Group chat**:
 A chat whose chat_mode is group.

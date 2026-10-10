@@ -2,12 +2,13 @@
 
 中文 | [English](./README.md)
 
-**让 Claude、ChatGPT 这类 AI 助手直接读写你的飞书文档、查看你的飞书聊天。**
+**让 Claude、ChatGPT 这类 AI 助手直接读写你的飞书文档、表格、多维表格、幻灯片和文件，阅读思维笔记，查看你的飞书聊天。**
 
 部署好之后，你可以在 Claude 或 ChatGPT 里直接说：
 
 - "帮我找一下上周关于 Q3 预算的飞书文档，总结要点。"
 - "把这份会议纪要整理好，新建成一篇飞书文档。"
+- "读一下周报表格，看看谁还没填。"
 - "看看'产品讨论群'今天聊了什么，有没有提到我。"
 - "在这篇文档下面留个评论：数据口径需要再确认。"
 
@@ -33,9 +34,12 @@
 | | 能做 | 不能做 |
 | --- | --- | --- |
 | **文档** | 搜索、阅读、新建、编辑文档；读取和添加评论；查看知识库；下载文档里的图片 | 删除知识库里的文档 |
-| **删除文档** | 只能删你云空间里的普通文档，而且只是**移进回收站**（可以找回），还必须先说对文档的完整标题 | 永久删除任何东西 |
+| **表格、多维表格、幻灯片、文件** | 读写单元格（包括公式）、读写多维表格的记录和字段、读写幻灯片页、读取小文件（≤256 KiB）和上传文件（≤10 MiB）、阅读思维笔记 | 编辑思维笔记，或删除知识库里的任何东西 |
+| **删除文档** | 只能删你云空间里的文档、表格、多维表格、幻灯片和文件，而且只是**移进回收站**（可以找回），还必须先说对完整标题 | 永久删除任何东西 |
 | **人员** | 查你自己的信息、查同事的基本信息、按名字搜人 | 修改通讯录 |
 | **聊天** | 列出你的群聊和单聊、读消息、搜索消息 | **发消息**、建群、改群、删群 —— 聊天完全只读 |
+
+删掉多维表格的字段或记录，或删掉一页幻灯片，无法撤销，所以 AI 会先跟你确认。
 
 ---
 
@@ -174,7 +178,7 @@ Node.js 可以到 <https://nodejs.org> 下载 LTS 版本。方式 A 和 C 都不
 
 ### ④ 开通权限、开机器人能力、发布应用
 
-1. **开通权限。** 打开 **权限管理**，点击 **开通权限**。先切换到 **用户身份权限（user_access_token）** 页签，再选择权限，把[权限清单](#权限清单)里的每一项都开通，**不多开也不少开**。不要在 应用身份权限（tenant_access_token）下开通。
+1. **开通权限。** 打开 **权限管理**，点击 **开通权限**。先切换到 **用户身份权限（user_access_token）** 页签，再选择权限，把[权限清单](#权限清单)里的每一项都开通，**不多开也不少开**。不要在 应用身份权限（tenant_access_token）下开通。小提示：在 **权限管理** 里用批量导入，把 `scopes.import.json` 贴进去。
 2. **开机器人能力。** 发布之前，在自建应用里开通机器人能力（Bot）。（在 **添加应用能力** 里找到"机器人"并添加。）飞书的消息接口要求开通此能力：不开通的话，读取会话会报错 230006（Bot ability is not activated）。
 3. **发布。** 打开 **版本管理与发布**，创建一个版本并发布。如果你在公司的飞书里，这一步可能需要管理员审批，等审批通过再继续。
 
@@ -201,6 +205,8 @@ open_id: ou_xxxxxxxxxxxxxxxx
 ```
 
 **这正是我们要的。** 把 `ou_` 开头的那串字符复制下来，这就是你的飞书身份 ID。
+
+飞书的 open_id 是按应用区分的，所以 `OWNER_OPEN_ID` 必须是**这个连接器自己的飞书应用**下的 open_id。从别的应用抄来的 open_id，会看到光秃秃的 "This Feishu account is not the owner." 页面。把 `OWNER_OPEN_ID` 改回 `pending`，登录一次就能看到正确的 open_id，再填回去。
 
 ### ⑦ 把 open_id 填回去
 
@@ -241,6 +247,8 @@ open_id: ou_xxxxxxxxxxxxxxxx
 
 你登录的飞书账号和 `OWNER_OPEN_ID` 里填的不是同一个人。换回主人的账号登录。
 
+飞书的 open_id 是按应用区分的，所以 `OWNER_OPEN_ID` 必须是**这个连接器自己的飞书应用**下的 open_id。从别的应用抄来的 open_id，也会看到这个光秃秃的页面（没有 `open_id:` 那一行）。把 `OWNER_OPEN_ID` 改回 `pending`，登录一次就能看到正确的 open_id，再填回去。
+
 ### AI 说"Feishu authorization expired; reconnect the connector"
 
 飞书的登录授权过期了（比如很久没用）。在 Claude 或 ChatGPT 里断开连接器，再用同一个地址重新连接即可。
@@ -255,7 +263,11 @@ open_id: ou_xxxxxxxxxxxxxxxx
 
 ### 用 Lark 遇到问题怎么办？
 
-Lark 支持目前是 beta。如果某些功能不正常，不需要改代码，按[区域](#区域)一节把 `TOOL_BACKENDS` 设成全部走 openapi 试试。
+Lark 支持目前是 beta。如果某些功能不正常，不需要改代码，按[区域](#区域)一节把 `TOOL_BACKENDS` 设成全部走 openapi 试试。Lark 控制台可能还没有全部权限。缺哪一项，那一项功能就不能用，其他的照常。
+
+### 更新了连接器，新功能怎么打开？
+
+重新部署，开通新权限（或再导入一次 `scopes.import.json`），发布一个新版本，然后断开连接器再连一次。
 
 ### 要花钱吗？
 
@@ -275,11 +287,14 @@ Worker 同时是连接器客户端的 OAuth 授权服务器，以及 `/mcp` 上�
 
 `OAUTH_KV` 保存 OAuth 状态。`FEISHU_TOKENS` 是 SQLite Durable Object，类名 `FeishuTokenStore`，迁移 `v1`，保存所有者的飞书令牌。一次调用最多 40 次出站请求。密钥只放在 Cloudflare 加密密钥里，仓库里没有密钥的值。
 
-十六个工具：
+二十五个工具：
 
-- 文档：`search_docs`、`fetch_doc`、`list_wiki_docs`、`get_doc_comments`、`create_doc`、`update_doc`、`add_doc_comment`、`fetch_doc_media`、`delete_doc`
+- 文档：`search_docs`、`fetch_doc`、`list_wiki_docs`、`get_doc_comments`、`create_doc`、`update_doc`、`add_doc_comment`、`fetch_doc_media`、`delete_doc`（云空间里的 docx、sheet、bitable、slides 或 file）
+- 表格、多维表格、幻灯片、文件、思维笔记：`read_sheet`、`write_sheet`、`read_bitable`、`write_bitable`、`read_slides`、`write_slides`、`read_file`、`write_file`、`read_mindnote`
 - 人员：`whoami`、`get_user`、`search_users`
 - 聊天，只读：`list_chats`、`list_chat_messages`、`search_messages`、`get_message`
+
+`read_file` 下载最多返回 256 KiB（`content_base64`，UTF-8 的 `.md` `.txt` `.csv` `.json` 还会带 `text`）。更大的文件返回 `too_large: true`，不带字节。`write_file` 上传解码后最多 10 MiB。重新上传会得到新的 `file_token`；旧文件还在，要用 `delete_doc` 才能删。
 
 ### 配置项
 
@@ -335,7 +350,7 @@ Worker 同时是连接器客户端的 OAuth 授权服务器，以及 `/mcp` 上�
 
 ### 工具后端
 
-`TOOL_BACKENDS` 是一个 JSON 对象。键是代理工具，值是 `mcp` 或 `openapi`。省略的键用该工具的默认值。`search_docs` 默认是 OpenAPI。这些默认是 `mcp`：`fetch_doc`、`list_wiki_docs`、`get_doc_comments`、`create_doc`、`update_doc`、`add_doc_comment`、`get_user`、`search_users`、`fetch_doc_media`。不是 `mcp` 或 `openapi` 的值无效：该工具留在 `mcp`，Worker 记下 `tool_backends_invalid`。非法 JSON 则全部保持默认，并记下同一事件。这些直连工具只用 OpenAPI，不能切换：`whoami`、`delete_doc`、`list_chats`、`list_chat_messages`、`search_messages`、`get_message`。
+`TOOL_BACKENDS` 是一个 JSON 对象。键是代理工具，值是 `mcp` 或 `openapi`。省略的键用该工具的默认值。`search_docs` 默认是 OpenAPI。这些默认是 `mcp`：`fetch_doc`、`list_wiki_docs`、`get_doc_comments`、`create_doc`、`update_doc`、`add_doc_comment`、`get_user`、`search_users`、`fetch_doc_media`。不是 `mcp` 或 `openapi` 的值无效：该工具留在 `mcp`，Worker 记下 `tool_backends_invalid`。非法 JSON 则全部保持默认，并记下同一事件。这些直连工具只用 OpenAPI，不能切换：`whoami`、`delete_doc`、`list_chats`、`list_chat_messages`、`search_messages`、`get_message`、`read_sheet`、`write_sheet`、`read_bitable`、`write_bitable`、`read_slides`、`write_slides`、`read_file`、`write_file`、`read_mindnote`。
 
 ### 单聊发现
 
@@ -378,6 +393,29 @@ im:message:readonly
 im:message.group_msg:get_as_user
 im:message.p2p_msg:get_as_user
 search:message
+sheets:spreadsheet.meta:read
+sheets:spreadsheet:read
+sheets:spreadsheet:create
+sheets:spreadsheet:write_only
+base:app:read
+base:table:read
+base:field:read
+base:record:read
+base:app:create
+base:field:create
+base:record:create
+base:record:update
+base:field:update
+base:field:delete
+base:record:delete
+slides:presentation:read
+slides:presentation:create
+slides:presentation:update
+slides:presentation:write_only
+drive:drive.metadata:readonly
+drive:file:download
+drive:file:upload
+mindnote:node:read
 offline_access
 ```
 

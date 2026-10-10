@@ -1,0 +1,16 @@
+{
+  "data": {
+    "field": {
+      "field_id": "fldExQty",
+      "field_name": "qty",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.0"
+      },
+      "type": 2,
+      "ui_type": "Number"
+    }
+  }
+}

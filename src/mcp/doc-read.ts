@@ -1,7 +1,7 @@
 import type { CallToolResult } from "@modelcontextprotocol/server";
 import type { Env } from "../env";
 import { FeishuClient } from "../feishu/client";
-import { commentsUrl, DOC_WIKI_SEARCH_URL, feishuOpen, parseDocRef, rawContentUrl, resolveDoc, stringField, type ResolvedDoc, wikiNodeFields, wikiNodesUrl, wikiNodeUrl } from "../feishu/docs";
+import { commentsUrl, DOC_WIKI_SEARCH_URL, feishuOpen, parseDocRef, rawContentUrl, resolveDoc, resolvesWikiNode, stringField, type ResolvedDoc, wikiNodeFields, wikiNodesUrl, wikiNodeUrl } from "../feishu/docs";
 import { asRecord } from "../feishu/payload";
 import { callFeishuMcp, callFeishuMcpResult, type FeishuCall } from "../feishu/mcp-proxy";
 import { openIdNameLookup } from "../feishu/users";
@@ -212,14 +212,34 @@ function unresolvedDoc(resolved: Exclude<ResolvedDoc, { ok: true }>): FeishuCall
   }
 }
 
-async function fetchOpenApi(client: FeishuClient, accessToken: string, doc: string): Promise<FeishuCall> {
+const FETCH_DOC_READ_TOOL: Record<string, string> = {
+  sheet: "read_sheet",
+  bitable: "read_bitable",
+  slides: "read_slides",
+  file: "read_file",
+  mindnote: "read_mindnote",
+};
+
+function fetchDocTypeRefusal(objType: string): FeishuCall {
+  const label = objType.length > 0 ? objType : "unknown";
+  const tool = FETCH_DOC_READ_TOOL[label];
+  return { kind: "done", text: tool ? `this is a ${label}; use ${tool}` : `this is a ${label}`, isError: true };
+}
+
+async function gateFetchDoc(client: FeishuClient, accessToken: string, doc: string): Promise<{ token: string } | FeishuCall> {
+  const ref = parseDocRef(doc);
+  if (!resolvesWikiNode(doc)) {
+    if (ref.objType !== "docx") return fetchDocTypeRefusal(ref.objType);
+    return { token: ref.token };
+  }
   const resolved = await resolveDoc(doc, (url) => feishuOpen(client, "GET", url, accessToken));
   if (!resolved.ok) return unresolvedDoc(resolved);
-  if (resolved.objType !== "docx") {
-    const label = resolved.objType.length > 0 ? resolved.objType : "unknown";
-    return { kind: "done", text: `only docx is readable here (this is a ${label})`, isError: true };
-  }
-  const result = await feishuOpen(client, "GET", rawContentUrl(resolved.token), accessToken);
+  if (resolved.objType !== "docx") return fetchDocTypeRefusal(resolved.objType);
+  return { token: resolved.token };
+}
+
+async function fetchOpenApi(client: FeishuClient, accessToken: string, token: string): Promise<FeishuCall> {
+  const result = await feishuOpen(client, "GET", rawContentUrl(token), accessToken);
   return fromOpen(result, capOpenContent(stringField(result.data, "content")));
 }
 
@@ -500,13 +520,15 @@ async function fetchMcp(client: FeishuClient, accessToken: string, args: FetchDo
 }
 
 export function callFetchDoc(env: Env, openId: string, args: FetchDocArgs): Promise<CallToolResult> {
-  return runTool(env, openId, "fetch_doc", parseDocRef(args.doc).token, (client, accessToken, backend) =>
-    byBackend(
+  return runTool(env, openId, "fetch_doc", parseDocRef(args.doc).token, async (client, accessToken, backend) => {
+    const gated = await gateFetchDoc(client, accessToken, args.doc);
+    if ("kind" in gated) return gated;
+    return byBackend(
       backend,
       () => fetchMcp(client, accessToken, args),
-      () => fetchOpenApi(client, accessToken, args.doc),
-    ),
-  );
+      () => fetchOpenApi(client, accessToken, gated.token),
+    );
+  });
 }
 
 export function callListWikiDocs(env: Env, openId: string, args: ListWikiDocsArgs): Promise<CallToolResult> {

@@ -1,0 +1,16 @@
+{
+  "data": {
+    "revision": 3,
+    "spreadsheetToken": "shtcnEXAMPLE",
+    "valueRange": {
+      "majorDimension": "ROWS",
+      "range": "shtEx1!A1:D3",
+      "revision": 3,
+      "values": [
+        ["name", "qty", "note", "batch"],
+        ["apple", 3, "probe", null],
+        ["pear", 5, "=B2+2", null]
+      ]
+    }
+  }
+}

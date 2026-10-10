@@ -114,6 +114,66 @@ test("every Lark CLI command names the connector's own profile", () => {
   }
 });
 
+test("both READMEs add the sheet example, type row, bulk-import tip, upgrade FAQ, and twenty-five tools", () => {
+  const english = readFileSync(new URL("../README.md", import.meta.url), "utf8");
+  const chinese = readFileSync(new URL("../README.zh-CN.md", import.meta.url), "utf8");
+  assert.match(english, /Read the weekly summary sheet and tell me who hasn't filled it in yet\./);
+  assert.match(chinese, /读一下周报表格，看看谁还没填。/);
+  assert.match(english, /\*\*Sheets, Bases, slides, files\*\*/);
+  assert.match(chinese, /\*\*表格、多维表格、幻灯片、文件\*\*/);
+  assert.match(english, /formulas too/);
+  assert.match(english, /Edit mind notes/);
+  assert.match(english, /docs, sheets, Bases, slides and files in your own cloud space/);
+  assert.match(english, /Deleting a Base field or record, or a slide page, can't be undone/);
+  assert.match(chinese, /删掉多维表格的字段或记录，或删掉一页幻灯片，无法撤销/);
+  assert.match(english, /bulk import \(批量导入\)/);
+  assert.match(english, /scopes\.import\.json/);
+  assert.match(chinese, /批量导入/);
+  assert.match(chinese, /scopes\.import\.json/);
+  assert.match(english, /I updated the connector\. How do I turn on the new features\?/);
+  assert.match(chinese, /更新了连接器，新功能怎么打开？/);
+  assert.match(english, /A Lark console may not offer every scope yet/);
+  assert.match(chinese, /Lark 控制台可能还没有全部权限/);
+  assert.match(english, /Twenty-five tools/);
+  assert.match(chinese, /二十五个工具/);
+  assert.match(english, /`read_sheet`/);
+  assert.match(english, /`write_sheet`/);
+  assert.match(english, /`read_bitable`/);
+  assert.match(english, /`write_bitable`/);
+  assert.match(english, /`read_slides`/);
+  assert.match(english, /`write_slides`/);
+  assert.match(english, /`read_file`/);
+  assert.match(english, /`write_file`/);
+  assert.match(english, /`read_mindnote`/);
+  assert.match(english, /256 KiB/);
+  assert.match(english, /10 MiB/);
+  assert.match(english, /new `file_token`/);
+  assert.match(chinese, /`read_sheet`/);
+  assert.match(chinese, /`read_mindnote`/);
+  assert.match(chinese, /256 KiB/);
+  assert.match(chinese, /10 MiB/);
+  for (const heading of ["What it can and cannot do", "FAQ", "Technical reference (for developers)"]) {
+    assert.match(english, new RegExp(`## ${heading.replace(/[()]/g, "\\$&")}`));
+  }
+  for (const heading of ["它能做什么、不能做什么", "常见问题", "技术参考（给开发者）"]) {
+    assert.match(chinese, new RegExp(`## ${heading.replace(/[()（）]/g, "\\$&")}`));
+  }
+});
+
+test("the runbook names the widened delete, bulk-import file, and existing-Worker upgrade", () => {
+  assert.match(runbook, /Doc delete only moves one cloud-space docx, sheet, bitable, slides or file/);
+  assert.match(runbook, /scopes\.import\.json/);
+  assert.match(runbook, /Upgrade an existing Worker/);
+  assert.match(runbook, /Never widen scopes, tools or the endpoint allowlist\./);
+});
+
+test("CONTEXT.md names the file inline cap and in-doc delete", () => {
+  const context = readFileSync(new URL("../CONTEXT.md", import.meta.url), "utf8");
+  assert.match(context, /\*\*File inline cap\*\*/);
+  assert.match(context, /256 KiB/);
+  assert.match(context, /\*\*In-doc delete\*\*/);
+});
+
 test("Lark CLI login is narrowed to one connector scope and logged out", () => {
   assert.ok(FEISHU_SCOPES.includes("contact:user.base:readonly"));
   const body = runbook;

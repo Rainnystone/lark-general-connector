@@ -1,0 +1,15 @@
+{
+  "data": {
+    "revision": 2,
+    "spreadsheetToken": "shtcnEXAMPLE",
+    "tableRange": "shtEx1!A3:C3",
+    "updates": {
+      "revision": 2,
+      "spreadsheetToken": "shtcnEXAMPLE",
+      "updatedCells": 3,
+      "updatedColumns": 3,
+      "updatedRange": "shtEx1!A3:C3",
+      "updatedRows": 1
+    }
+  }
+}

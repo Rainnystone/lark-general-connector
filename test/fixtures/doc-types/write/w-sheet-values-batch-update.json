@@ -1,0 +1,15 @@
+{
+  "data": {
+    "responses": [
+      {
+        "spreadsheetToken": "shtcnEXAMPLE",
+        "updatedCells": 1,
+        "updatedColumns": 1,
+        "updatedRange": "shtEx1!D1:D1",
+        "updatedRows": 1
+      }
+    ],
+    "revision": 3,
+    "spreadsheetToken": "shtcnEXAMPLE"
+  }
+}

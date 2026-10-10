@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 import { isEndpointAllowed } from "../src/feishu/client";
-import { toolBackend } from "../src/mcp/tool-backends";
+import { PROXIED_TOOLS, toolBackend } from "../src/mcp/tool-backends";
 import { BODY_CHAR_LIMIT } from "../src/feishu/payload";
 import { MARKER } from "./fake-feishu";
 import fetchDocPages from "./fixtures/fetch-doc-pages.json" with { type: "json" };
@@ -44,6 +44,10 @@ describe("doc read tools", () => {
     expect(schemaOf("list_wiki_docs").required).toBeUndefined();
     expect(Object.keys(schemaOf("get_doc_comments").properties ?? {})).toEqual(["doc", "page_token"]);
     expect(schemaOf("get_doc_comments").required).toEqual(["doc"]);
+    const routing =
+      "Only docx content is returned. For sheet use read_sheet, bitable read_bitable, slides read_slides, file read_file, mindnote read_mindnote.";
+    expect(String(tools.find((entry) => entry.name === "fetch_doc")?.description)).toContain(routing);
+    expect(String(tools.find((entry) => entry.name === "list_wiki_docs")?.description)).toContain(routing);
   });
 
   it("calls each Feishu MCP tool once and passes the result through", async () => {
@@ -99,7 +103,12 @@ describe("doc read tools", () => {
       const response = await callTool(accessToken, item.name, item.args);
       const sent = fake.calls.slice(before).filter((call) => call.url.startsWith("https://mcp.feishu.cn/mcp"));
       expect(sent).toHaveLength(1);
-      expect(fake.calls.slice(before).some((call) => call.url.includes("open.feishu.cn"))).toBe(false);
+      const openCalls = fake.calls.slice(before).filter((call) => call.url.includes("open.feishu.cn"));
+      if (item.name === "fetch_doc") {
+        expect(openCalls.every((call) => call.url.includes("/wiki/v2/spaces/get_node"))).toBe(true);
+      } else {
+        expect(openCalls).toHaveLength(0);
+      }
       expect(sent[0]?.headers["x-lark-mcp-uat"]).toBe("u-access-1");
       expect(sent[0]?.headers["x-lark-mcp-allowed-tools"]).toBe(item.feishuTool);
       expect(sent[0]?.headers["content-type"]).toContain("application/json");
@@ -255,6 +264,18 @@ describe("doc read tools", () => {
     expect(toolBackend("{not-json", "search_docs")).toEqual({ backend: "openapi", invalid: true });
     expect(toolBackend(JSON.stringify({ search_docs: "open_api" }), "search_docs")).toEqual({ backend: "mcp", invalid: true });
     expect(toolBackend(JSON.stringify({ fetch_doc: "open_api" }), "search_docs")).toEqual({ backend: "openapi", invalid: true });
+    expect([...PROXIED_TOOLS]).toEqual([
+      "search_docs",
+      "fetch_doc",
+      "list_wiki_docs",
+      "get_doc_comments",
+      "create_doc",
+      "update_doc",
+      "add_doc_comment",
+      "get_user",
+      "search_users",
+      "fetch_doc_media",
+    ]);
 
     const logs = logLines();
     try {
@@ -331,7 +352,7 @@ describe("doc read tools", () => {
     await callTool(accessToken, "fetch_doc", { doc: "doxcn1" });
     const sent = fake.calls.slice(before);
     expect(sent.filter((call) => call.url.startsWith("https://mcp.feishu.cn/mcp"))).toHaveLength(2);
-    expect(sent.some((call) => call.url.includes("open.feishu.cn"))).toBe(false);
+    expect(sent.filter((call) => call.url.includes("open.feishu.cn")).every((call) => call.url.includes("/wiki/v2/spaces/get_node"))).toBe(true);
     expect(toolText(response.body)).toBe("title: Notes\n\nmcp-pass");
     const invalid = logs.lines().filter((line) => line.includes('"event":"tool_backends_invalid"'));
     expect(invalid).toHaveLength(1);
@@ -657,8 +678,141 @@ describe("doc read tools", () => {
     const before = fake.calls.length;
     const read = await callTool(accessToken, "fetch_doc", { doc: "Y9sSwvBLANK" });
     expect((read.body as { result?: { isError?: boolean } }).result?.isError).toBe(true);
-    expect(toolText(read.body)).toBe("only docx is readable here (this is a unknown)");
+    expect(toolText(read.body)).toBe("this is a unknown");
     expect(fake.calls.slice(before).some((call) => call.url.includes("/raw_content"))).toBe(false);
+  });
+
+  it("refuses sheet, bitable, slides, file, and mindnote wiki nodes and names the read tool", async () => {
+    env.TOOL_BACKENDS = JSON.stringify({ fetch_doc: "openapi" });
+    const { accessToken } = await login();
+    const cases = [
+      { objType: "sheet", objToken: "shtcnEXAMPLE", tool: "read_sheet" },
+      { objType: "bitable", objToken: "bascnEXAMPLE", tool: "read_bitable" },
+      { objType: "slides", objToken: "sldcnEXAMPLE", tool: "read_slides" },
+      { objType: "file", objToken: "filecnEXAMPLE", tool: "read_file" },
+      { objType: "mindnote", objToken: "bmncnEXAMPLE", tool: "read_mindnote" },
+    ] as const;
+    for (const item of cases) {
+      fake.extra = (method, url) => {
+        if (method === "GET" && url.pathname === "/open-apis/wiki/v2/spaces/get_node") {
+          return Response.json({
+            code: 0,
+            data: { node: { obj_token: item.objToken, obj_type: item.objType, space_id: "spcW", node_token: `wikcn${item.objType}` } },
+          });
+        }
+        return undefined;
+      };
+      const before = fake.calls.length;
+      const response = await callTool(accessToken, "fetch_doc", { doc: `https://example.feishu.cn/wiki/wikcn${item.objType}` });
+      expect(toolText(response.body)).toBe(`this is a ${item.objType}; use ${item.tool}`);
+      expect((response.body as { result?: { isError?: boolean } }).result?.isError).toBe(true);
+      expect(fake.calls.slice(before).some((call) => call.url.includes("/raw_content"))).toBe(false);
+    }
+  });
+
+  it("refuses direct sheet, base, slides, file, and mindnote URLs and names the read tool", async () => {
+    env.TOOL_BACKENDS = JSON.stringify({ fetch_doc: "openapi" });
+    const { accessToken } = await login();
+    const cases = [
+      { path: "sheets", objType: "sheet", tool: "read_sheet", token: "shtcnDIRECT" },
+      { path: "base", objType: "bitable", tool: "read_bitable", token: "bascnDIRECT" },
+      { path: "slides", objType: "slides", tool: "read_slides", token: "sldcnDIRECT" },
+      { path: "file", objType: "file", tool: "read_file", token: "filecnDIRECT" },
+      { path: "mindnotes", objType: "mindnote", tool: "read_mindnote", token: "bmncnDIRECT" },
+    ] as const;
+    for (const item of cases) {
+      const before = fake.calls.length;
+      const response = await callTool(accessToken, "fetch_doc", { doc: `https://example.feishu.cn/${item.path}/${item.token}` });
+      expect(toolText(response.body)).toBe(`this is a ${item.objType}; use ${item.tool}`);
+      expect((response.body as { result?: { isError?: boolean } }).result?.isError).toBe(true);
+      expect(
+        fake.calls.slice(before).some((call) => call.url.includes("/raw_content") || call.url.includes("/wiki/v2/spaces/get_node")),
+      ).toBe(false);
+    }
+  });
+
+  it("routes typed drive URLs on the default MCP backend with no outbound call", async () => {
+    const { accessToken } = await login();
+    fake.extra = (_method, url, body) => {
+      if (url.pathname !== "/mcp") return undefined;
+      const payload = JSON.parse(body) as { method?: string };
+      if (payload.method !== "tools/call") return undefined;
+      return Response.json({
+        jsonrpc: "2.0",
+        id: 1,
+        result: { isError: true, content: [{ type: "text", text: "[VALIDATION:400] Unable to extract document ID" }] },
+      });
+    };
+    const cases = [
+      { path: "sheets", objType: "sheet", tool: "read_sheet", token: "shtcnDIRECT" },
+      { path: "base", objType: "bitable", tool: "read_bitable", token: "bascnDIRECT" },
+      { path: "slides", objType: "slides", tool: "read_slides", token: "sldcnDIRECT" },
+      { path: "file", objType: "file", tool: "read_file", token: "filecnDIRECT" },
+      { path: "mindnotes", objType: "mindnote", tool: "read_mindnote", token: "bmncnDIRECT" },
+    ] as const;
+    for (const item of cases) {
+      const before = fake.calls.length;
+      const response = await callTool(accessToken, "fetch_doc", { doc: `https://example.feishu.cn/${item.path}/${item.token}` });
+      expect(toolText(response.body)).toBe(`this is a ${item.objType}; use ${item.tool}`);
+      expect((response.body as { result?: { isError?: boolean } }).result?.isError).toBe(true);
+      expect(
+        fake.calls.slice(before).some((call) => call.url.startsWith("https://mcp.feishu.cn/mcp") && call.body.includes("tools/call")),
+      ).toBe(false);
+      expect(fake.calls.slice(before).some((call) => call.url.includes("open.feishu.cn"))).toBe(false);
+    }
+  });
+
+  it("routes a wiki URL or sheet node token on the default MCP backend after get_node", async () => {
+    const { accessToken } = await login();
+    fake.extra = (method, url, body) => {
+      if (method === "GET" && url.pathname === "/open-apis/wiki/v2/spaces/get_node") {
+        return Response.json({
+          code: 0,
+          data: { node: { obj_token: "shtcnEXAMPLE", obj_type: "sheet", space_id: "spcW", node_token: "wikcnSHEET" } },
+        });
+      }
+      if (url.pathname !== "/mcp") return undefined;
+      const payload = JSON.parse(body) as { method?: string };
+      if (payload.method !== "tools/call") return undefined;
+      return Response.json({
+        jsonrpc: "2.0",
+        id: 1,
+        result: { isError: true, content: [{ type: "text", text: "[NETWORK:5002] Failed to get child blocks" }] },
+      });
+    };
+    for (const doc of ["https://example.feishu.cn/wiki/wikcnSHEET", "wikcnSHEET"] as const) {
+      const before = fake.calls.length;
+      const response = await callTool(accessToken, "fetch_doc", { doc });
+      expect(toolText(response.body)).toBe("this is a sheet; use read_sheet");
+      expect((response.body as { result?: { isError?: boolean } }).result?.isError).toBe(true);
+      expect(fake.calls.slice(before).some((call) => call.url.includes("/wiki/v2/spaces/get_node"))).toBe(true);
+      expect(
+        fake.calls.slice(before).some((call) => call.url.startsWith("https://mcp.feishu.cn/mcp") && call.body.includes("tools/call")),
+      ).toBe(false);
+      expect(fake.calls.slice(before).some((call) => call.url.includes("/raw_content"))).toBe(false);
+    }
+  });
+
+  it("rewrites wiki get_node to open.larksuite.com when refusing a sheet on lark", async () => {
+    env.FEISHU_REGION = "lark";
+    const { accessToken } = await login();
+    fake.extra = (method, url) => {
+      if (method === "GET" && url.pathname === "/open-apis/wiki/v2/spaces/get_node") {
+        return Response.json({
+          code: 0,
+          data: { node: { obj_token: "shtcnEXAMPLE", obj_type: "sheet", space_id: "spcW", node_token: "wikcnSHEET" } },
+        });
+      }
+      return undefined;
+    };
+    const before = fake.calls.length;
+    const response = await callTool(accessToken, "fetch_doc", { doc: "https://example.feishu.cn/wiki/wikcnSHEET" });
+    expect(toolText(response.body)).toBe("this is a sheet; use read_sheet");
+    const outbound = fake.calls.slice(before).map((call) => call.url);
+    expect(outbound.some((url) => url.includes("https://open.larksuite.com/open-apis/wiki/v2/spaces/get_node"))).toBe(true);
+    expect(outbound.every((url) => !url.includes("open.feishu.cn"))).toBe(true);
+    expect(isEndpointAllowed("GET", "https://open.feishu.cn/open-apis/wiki/v2/spaces/get_node?token=wikcnSHEET")).toBe(true);
+    expect(isEndpointAllowed("GET", "https://open.larksuite.com/open-apis/wiki/v2/spaces/get_node?token=wikcnSHEET")).toBe(false);
   });
 
   it("refuses to read a non-docx wiki node and comments with its real file type", async () => {
@@ -687,7 +841,7 @@ describe("doc read tools", () => {
     const before = fake.calls.length;
     const read = await callTool(accessToken, "fetch_doc", { doc: nodeToken });
     expect((read.body as { result?: { isError?: boolean } }).result?.isError).toBe(true);
-    expect(toolText(read.body)).toBe("only docx is readable here (this is a sheet)");
+    expect(toolText(read.body)).toBe("this is a sheet; use read_sheet");
     expect(fake.calls.slice(before).some((call) => call.url.includes("/raw_content"))).toBe(false);
     const comments = toolText((await callTool(accessToken, "get_doc_comments", { doc: nodeToken })).body);
     expect(comments).toContain("sheet note");

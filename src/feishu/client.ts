@@ -16,32 +16,58 @@ interface AllowRule {
   method: string;
   host: string;
   path: string;
-  query?: "type=docx";
+  query?: "type=docx|sheet|bitable|slides|file";
 }
 
 const ALLOWED: readonly AllowRule[] = [
-  { method: "DELETE", host: "open.feishu.cn", path: "^/open-apis/drive/v1/files/[^/]+$", query: "type=docx" },
+  { method: "DELETE", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields/[^/]+$" },
+  { method: "DELETE", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/records/[^/]+$" },
+  { method: "DELETE", host: "open.feishu.cn", path: "^/open-apis/drive/v1/files/[^/]+$", query: "type=docx|sheet|bitable|slides|file" },
+  { method: "DELETE", host: "open.feishu.cn", path: "^/open-apis/slides_ai/v1/xml_presentations/[^/]+/slide$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/authen/v1/user_info$" },
+  { method: "GET", host: "open.feishu.cn", path: "^/open-apis/base/v3/bases/[^/]+/tables/[^/]+/records$" },
+  { method: "GET", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+$" },
+  { method: "GET", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables$" },
+  { method: "GET", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/board/v1/whiteboards/[^/]+/nodes$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/contact/v3/users/(?!batch$|batch_get_id$|find_by_department$)[^/]+$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/contact/v3/users/batch$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/docx/v1/documents/[^/]+$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/docx/v1/documents/[^/]+/raw_content$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/drive/v1/files/[^/]+/comments$" },
+  { method: "GET", host: "open.feishu.cn", path: "^/open-apis/drive/v1/files/[^/]+/download$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/drive/v1/medias/[^/]+/download$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/im/v1/chats$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/im/v1/messages$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/im/v1/messages/om_[^/]+$" },
+  { method: "GET", host: "open.feishu.cn", path: "^/open-apis/mindnote/v1/mindnotes/[^/]+/nodes$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/search/v1/user$" },
+  { method: "GET", host: "open.feishu.cn", path: "^/open-apis/sheets/v2/spreadsheets/[^/]+/values/[^/]+$" },
+  { method: "GET", host: "open.feishu.cn", path: "^/open-apis/sheets/v3/spreadsheets/[^/]+/sheets/query$" },
+  { method: "GET", host: "open.feishu.cn", path: "^/open-apis/slides_ai/v1/xml_presentations/[^/]+$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/wiki/v2/spaces/[^/]+/nodes$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/wiki/v2/spaces/get_node$" },
   { method: "POST", host: "accounts.feishu.cn", path: "^/oauth/v3/token$" },
   { method: "POST", host: "mcp.feishu.cn", path: "^/mcp$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/records$" },
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/docx/v1/documents$" },
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/docx/v1/documents/[^/]+/blocks/[^/]+/children$" },
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/drive/v1/files/[^/]+/comments$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/drive/v1/files/upload_all$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/drive/v1/metas/batch_query$" },
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/im/v1/messages/search$" },
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/search/v2/doc_wiki/search$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/sheets/v2/spreadsheets/[^/]+/values_append$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/sheets/v2/spreadsheets/[^/]+/values_batch_update$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/sheets/v3/spreadsheets$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/slides_ai/v1/xml_presentations$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/slides_ai/v1/xml_presentations/[^/]+/slide$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/slides_ai/v1/xml_presentations/[^/]+/slide/replace$" },
+  { method: "PUT", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields/[^/]+$" },
+  { method: "PUT", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/records/[^/]+$" },
+  { method: "PUT", host: "open.feishu.cn", path: "^/open-apis/sheets/v2/spreadsheets/[^/]+/values$" },
 ];
 
 function allowLine(rule: AllowRule): string {
@@ -54,9 +80,12 @@ export function endpointAllowlist(): readonly string[] {
   return ALLOWED.map(allowLine);
 }
 
-function docxDelete(params: URLSearchParams): boolean {
+const DRIVE_DELETE_TYPES = new Set(["docx", "sheet", "bitable", "slides", "file"]);
+
+function driveDeleteType(params: URLSearchParams): boolean {
   const types = params.getAll("type");
-  return types.length === 1 && types[0] === "docx";
+  const type = types[0];
+  return types.length === 1 && type !== undefined && DRIVE_DELETE_TYPES.has(type);
 }
 
 export class EndpointNotAllowedError extends Error {
@@ -85,8 +114,8 @@ export function isEndpointAllowed(method: string, url: string): boolean {
     if (entry.method !== verb || entry.host !== parsed.host || !new RegExp(entry.path).test(parsed.pathname)) return false;
     if (!entry.query) return true;
     switch (entry.query) {
-      case "type=docx":
-        return docxDelete(parsed.searchParams);
+      case "type=docx|sheet|bitable|slides|file":
+        return driveDeleteType(parsed.searchParams);
       default: {
         const unexpected: never = entry.query;
         return unexpected;
@@ -107,7 +136,7 @@ export class FeishuClient {
     this.fetchImpl = options?.fetchImpl ?? fetch.bind(globalThis);
   }
 
-  async request(method: string, url: string, init?: { headers?: HeadersInit; body?: string }): Promise<Response> {
+  async request(method: string, url: string, init?: { headers?: HeadersInit; body?: string | FormData }): Promise<Response> {
     if (!isEndpointAllowed(method, url)) {
       throw new EndpointNotAllowedError(method, url);
     }

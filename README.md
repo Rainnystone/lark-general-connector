@@ -2,12 +2,13 @@
 
 [中文](./README.zh-CN.md) | English
 
-**Let AI assistants like Claude and ChatGPT read and write your Feishu / Lark docs and look through your chats.**
+**Let AI assistants like Claude and ChatGPT read and write your Feishu / Lark docs, sheets, Bases, slides, and files, read mind notes, and look through your chats.**
 
 Once it's set up, you can just say things like this in Claude or ChatGPT:
 
 - "Find last week's Feishu doc about the Q3 budget and summarize it."
 - "Clean up these meeting notes and save them as a new Feishu doc."
+- "Read the weekly summary sheet and tell me who hasn't filled it in yet."
 - "What did the product discussion group talk about today? Did anyone mention me?"
 - "Leave a comment on this doc: the numbers need a second check."
 
@@ -33,9 +34,12 @@ This is an open-source "connector": you deploy it into **your own** Cloudflare a
 | | Can | Cannot |
 | --- | --- | --- |
 | **Docs** | Search, read, create, and edit docs; read and add comments; browse wikis; download images inside docs | Delete wiki docs |
-| **Deleting docs** | Only regular docs in your own cloud space, only **to the recycle bin** (recoverable), and only after the exact title is confirmed | Permanently delete anything |
+| **Sheets, Bases, slides, files** | Read and write cells (formulas too), read and edit Base records and fields, read and edit slide pages, read small files (≤256 KiB) and upload files (≤10 MiB), read mind notes | Edit mind notes, or delete anything inside a wiki |
+| **Deleting docs** | Only docs, sheets, Bases, slides and files in your own cloud space, only **to the recycle bin** (recoverable), and only after the exact title is confirmed | Permanently delete anything |
 | **People** | Look up yourself, look up a colleague's basic info, search people by name | Change the contact directory |
 | **Chats** | List your group and one-on-one chats, read and search messages | **Send messages**, create, change, or delete chats. Chats are strictly read-only |
+
+Deleting a Base field or record, or a slide page, can't be undone, so the AI checks with you first.
 
 ---
 
@@ -129,7 +133,7 @@ If an automated step doesn't work, the agent walks you through the manual versio
    npm ci && npm run setup
    ```
 
-4. Follow the wizard. It prints every prompt in Chinese and English, and it:
+4. Follow the wizard. It prints every prompt in 中文 and English, and it:
    - Logs you into Cloudflare (`wrangler login`), deploys, and pauses at every step where you need to do something in Feishu.
    - Has you type the App ID, App Secret, and open_id into the terminal. **They are not shown on screen and never written to a file.**
    - Generates `COOKIE_SECRET` for you and sets `OWNER_OPEN_ID` to `pending` at first.
@@ -174,7 +178,7 @@ For example `https://lark-general-connector.<your-subdomain>.workers.dev/callbac
 
 ### ④ Add permissions, enable the bot, publish the app
 
-1. **Permissions.** Open **Permissions & Scopes** (权限管理) and click **开通权限**. Switch to the **用户身份权限 (user_access_token)** tab before selecting scopes, then enable every item in the [scope list](#scope-list), **no more and no less**. Don't enable them under 应用身份权限 (tenant_access_token). (English console labels may differ.)
+1. **Permissions.** Open **Permissions & Scopes** (权限管理) and click **开通权限**. Switch to the **用户身份权限 (user_access_token)** tab before selecting scopes, then enable every item in the [scope list](#scope-list), **no more and no less**. Don't enable them under 应用身份权限 (tenant_access_token). (English console labels may differ.) Tip: in **Permissions & Scopes**, use bulk import (批量导入) and paste `scopes.import.json`.
 2. **Bot.** Enable the Bot capability (机器人) on the custom app before publishing. (Find "Bot" under **Add features** (添加应用能力) and add it; English labels may differ.) Feishu's message APIs require this: without it, reading chats fails with error 230006 "Bot ability is not activated".
 3. **Publish.** Open **Version Management & Release**, create a version, and publish it. In a company tenant this may need admin approval; wait until it's approved before you continue.
 
@@ -201,6 +205,8 @@ open_id: ou_xxxxxxxxxxxxxxxx
 ```
 
 **This is exactly what we want.** Copy the string starting with `ou_`. That's your Feishu identity ID.
+
+Feishu open_id is per-app, so `OWNER_OPEN_ID` has to be the open_id under **this** connector's Feishu app. An open_id copied from another app gives the bare page "This Feishu account is not the owner." Set `OWNER_OPEN_ID` back to `pending`, log in once to see the correct open_id, then set it.
 
 ### ⑦ Save the open_id
 
@@ -241,6 +247,8 @@ The first time you connect, this is **expected**. See step ⑥. If you've alread
 
 The Feishu account you logged in with isn't the one in `OWNER_OPEN_ID`. Log in with the owner's account.
 
+Feishu open_id is per-app, so `OWNER_OPEN_ID` has to be the open_id under **this** connector's Feishu app. An open_id copied from another app also gives this bare page, with no `open_id:` line. Set `OWNER_OPEN_ID` back to `pending`, log in once to see the correct open_id, then set it.
+
 ### The AI says "Feishu authorization expired; reconnect the connector"
 
 Your Feishu authorization expired (for example, after a long time unused). Disconnect the connector in Claude or ChatGPT and connect it again with the same URL.
@@ -255,7 +263,11 @@ No redeploy needed. In the Cloudflare dashboard → your connector → **Setting
 
 ### Something isn't working on Lark
 
-Lark support is beta. If a feature misbehaves, you don't need to change code. Follow the [Region](#region) section and set `TOOL_BACKENDS` so every tool uses openapi.
+Lark support is beta. If a feature misbehaves, you don't need to change code. Follow the [Region](#region) section and set `TOOL_BACKENDS` so every tool uses openapi. A Lark console may not offer every scope yet. If one is missing, that one feature won't work; the rest still do.
+
+### I updated the connector. How do I turn on the new features?
+
+Redeploy, enable the new scopes (or import `scopes.import.json` again), publish a new version of the app, then disconnect the connector and connect it again.
 
 ### Does it cost anything?
 
@@ -275,11 +287,14 @@ Login finishes, and `/mcp` answers, only when the Feishu open_id equals `OWNER_O
 
 `OAUTH_KV` stores OAuth state. `FEISHU_TOKENS` is a SQLite Durable Object, class `FeishuTokenStore`, migration `v1`, and holds the owner's Feishu tokens. One invocation may make at most 40 outbound calls. Secrets stay in Cloudflare encrypted secrets. The repo does not contain secret values.
 
-Sixteen tools:
+Twenty-five tools:
 
-- Docs: `search_docs`, `fetch_doc`, `list_wiki_docs`, `get_doc_comments`, `create_doc`, `update_doc`, `add_doc_comment`, `fetch_doc_media`, `delete_doc`
+- Docs: `search_docs`, `fetch_doc`, `list_wiki_docs`, `get_doc_comments`, `create_doc`, `update_doc`, `add_doc_comment`, `fetch_doc_media`, `delete_doc` (docx, sheet, bitable, slides, or file in cloud space)
+- Sheets, Bases, slides, files, mind notes: `read_sheet`, `write_sheet`, `read_bitable`, `write_bitable`, `read_slides`, `write_slides`, `read_file`, `write_file`, `read_mindnote`
 - People: `whoami`, `get_user`, `search_users`
 - Chats, read-only: `list_chats`, `list_chat_messages`, `search_messages`, `get_message`
+
+`read_file` download returns bytes up to 256 KiB (`content_base64`, plus `text` for UTF-8 `.md` `.txt` `.csv` `.json`). Larger files return `too_large: true` and no bytes. `write_file` upload accepts at most 10 MiB decoded. Re-uploading a file creates a new `file_token`; the old file stays until you delete it with `delete_doc`.
 
 ### Configuration
 
@@ -335,7 +350,7 @@ Dashboard vars are not in `wrangler.jsonc`. A committed var with the same name a
 
 ### Tool backends
 
-`TOOL_BACKENDS` is a JSON object. Keys are proxied tools. Values are `mcp` or `openapi`. An omitted key uses that tool's default. `search_docs` defaults to `openapi`. These default to `mcp`: `fetch_doc`, `list_wiki_docs`, `get_doc_comments`, `create_doc`, `update_doc`, `add_doc_comment`, `get_user`, `search_users`, `fetch_doc_media`. A value other than `mcp` or `openapi` is invalid: that tool stays on `mcp`, and the Worker logs `tool_backends_invalid`. Invalid JSON keeps every default and logs the same event. These direct tools are OpenAPI only and are not switchable: `whoami`, `delete_doc`, `list_chats`, `list_chat_messages`, `search_messages`, `get_message`.
+`TOOL_BACKENDS` is a JSON object. Keys are proxied tools. Values are `mcp` or `openapi`. An omitted key uses that tool's default. `search_docs` defaults to `openapi`. These default to `mcp`: `fetch_doc`, `list_wiki_docs`, `get_doc_comments`, `create_doc`, `update_doc`, `add_doc_comment`, `get_user`, `search_users`, `fetch_doc_media`. A value other than `mcp` or `openapi` is invalid: that tool stays on `mcp`, and the Worker logs `tool_backends_invalid`. Invalid JSON keeps every default and logs the same event. These direct tools are OpenAPI only and are not switchable: `whoami`, `delete_doc`, `list_chats`, `list_chat_messages`, `search_messages`, `get_message`, `read_sheet`, `write_sheet`, `read_bitable`, `write_bitable`, `read_slides`, `write_slides`, `read_file`, `write_file`, `read_mindnote`.
 
 ### P2P discovery
 
@@ -378,6 +393,29 @@ im:message:readonly
 im:message.group_msg:get_as_user
 im:message.p2p_msg:get_as_user
 search:message
+sheets:spreadsheet.meta:read
+sheets:spreadsheet:read
+sheets:spreadsheet:create
+sheets:spreadsheet:write_only
+base:app:read
+base:table:read
+base:field:read
+base:record:read
+base:app:create
+base:field:create
+base:record:create
+base:record:update
+base:field:update
+base:field:delete
+base:record:delete
+slides:presentation:read
+slides:presentation:create
+slides:presentation:update
+slides:presentation:write_only
+drive:drive.metadata:readonly
+drive:file:download
+drive:file:upload
+mindnote:node:read
 offline_access
 ```
 

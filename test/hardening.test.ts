@@ -21,6 +21,15 @@ const CATALOGUE = [
   { name: "get_user", title: "Look up a colleague", readOnly: true, destructive: false },
   { name: "search_users", title: "Search colleagues", readOnly: true, destructive: false },
   { name: "fetch_doc_media", title: "Fetch doc image/whiteboard", readOnly: true, destructive: false },
+  { name: "read_sheet", title: "Read a Feishu sheet", readOnly: true, destructive: false },
+  { name: "write_sheet", title: "Write a Feishu sheet", readOnly: false, destructive: true },
+  { name: "read_bitable", title: "Read a Feishu Base", readOnly: true, destructive: false },
+  { name: "write_bitable", title: "Write a Feishu Base", readOnly: false, destructive: true },
+  { name: "read_slides", title: "Read a Feishu slides deck", readOnly: true, destructive: false },
+  { name: "write_slides", title: "Write a Feishu slides deck", readOnly: false, destructive: true },
+  { name: "read_file", title: "Read a Feishu file", readOnly: true, destructive: false },
+  { name: "write_file", title: "Write a Feishu file", readOnly: false, destructive: false },
+  { name: "read_mindnote", title: "Read a Feishu mindnote", readOnly: true, destructive: false },
   { name: "list_chats", title: "List my chats", readOnly: true, destructive: false },
   { name: "list_chat_messages", title: "Read chat messages", readOnly: true, destructive: false },
   { name: "search_messages", title: "Search my messages", readOnly: true, destructive: false },
@@ -54,6 +63,10 @@ describe("server instructions", () => {
     expect(head).toContain("reads and writes");
     expect(head).toMatch(/chats are read-only/i);
     expect(head).toContain("docx");
+    expect(head).toContain("sheet");
+    expect(head).toContain("Base");
+    expect(head).toContain("slides");
+    expect(head).toContain("file");
     expect(head).toContain("recycle bin");
     expect(head).toContain("exact title");
     expect(head).toMatch(/wiki docs are never deleted/i);
@@ -69,28 +82,54 @@ describe("server instructions", () => {
  * A new Feishu call has to show up here before it can leave the Worker.
  */
 const ALLOWLIST = [
-  "DELETE open.feishu.cn ^/open-apis/drive/v1/files/[^/]+$ type=docx",
+  "DELETE open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields/[^/]+$",
+  "DELETE open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/records/[^/]+$",
+  "DELETE open.feishu.cn ^/open-apis/drive/v1/files/[^/]+$ type=docx|sheet|bitable|slides|file",
+  "DELETE open.feishu.cn ^/open-apis/slides_ai/v1/xml_presentations/[^/]+/slide$",
   "GET open.feishu.cn ^/open-apis/authen/v1/user_info$",
+  "GET open.feishu.cn ^/open-apis/base/v3/bases/[^/]+/tables/[^/]+/records$",
+  "GET open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+$",
+  "GET open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables$",
+  "GET open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields$",
   "GET open.feishu.cn ^/open-apis/board/v1/whiteboards/[^/]+/nodes$",
   "GET open.feishu.cn ^/open-apis/contact/v3/users/(?!batch$|batch_get_id$|find_by_department$)[^/]+$",
   "GET open.feishu.cn ^/open-apis/contact/v3/users/batch$",
   "GET open.feishu.cn ^/open-apis/docx/v1/documents/[^/]+$",
   "GET open.feishu.cn ^/open-apis/docx/v1/documents/[^/]+/raw_content$",
   "GET open.feishu.cn ^/open-apis/drive/v1/files/[^/]+/comments$",
+  "GET open.feishu.cn ^/open-apis/drive/v1/files/[^/]+/download$",
   "GET open.feishu.cn ^/open-apis/drive/v1/medias/[^/]+/download$",
   "GET open.feishu.cn ^/open-apis/im/v1/chats$",
   "GET open.feishu.cn ^/open-apis/im/v1/messages$",
   "GET open.feishu.cn ^/open-apis/im/v1/messages/om_[^/]+$",
+  "GET open.feishu.cn ^/open-apis/mindnote/v1/mindnotes/[^/]+/nodes$",
   "GET open.feishu.cn ^/open-apis/search/v1/user$",
+  "GET open.feishu.cn ^/open-apis/sheets/v2/spreadsheets/[^/]+/values/[^/]+$",
+  "GET open.feishu.cn ^/open-apis/sheets/v3/spreadsheets/[^/]+/sheets/query$",
+  "GET open.feishu.cn ^/open-apis/slides_ai/v1/xml_presentations/[^/]+$",
   "GET open.feishu.cn ^/open-apis/wiki/v2/spaces/[^/]+/nodes$",
   "GET open.feishu.cn ^/open-apis/wiki/v2/spaces/get_node$",
   "POST accounts.feishu.cn ^/oauth/v3/token$",
   "POST mcp.feishu.cn ^/mcp$",
+  "POST open.feishu.cn ^/open-apis/bitable/v1/apps$",
+  "POST open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields$",
+  "POST open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/records$",
   "POST open.feishu.cn ^/open-apis/docx/v1/documents$",
   "POST open.feishu.cn ^/open-apis/docx/v1/documents/[^/]+/blocks/[^/]+/children$",
   "POST open.feishu.cn ^/open-apis/drive/v1/files/[^/]+/comments$",
+  "POST open.feishu.cn ^/open-apis/drive/v1/files/upload_all$",
+  "POST open.feishu.cn ^/open-apis/drive/v1/metas/batch_query$",
   "POST open.feishu.cn ^/open-apis/im/v1/messages/search$",
   "POST open.feishu.cn ^/open-apis/search/v2/doc_wiki/search$",
+  "POST open.feishu.cn ^/open-apis/sheets/v2/spreadsheets/[^/]+/values_append$",
+  "POST open.feishu.cn ^/open-apis/sheets/v2/spreadsheets/[^/]+/values_batch_update$",
+  "POST open.feishu.cn ^/open-apis/sheets/v3/spreadsheets$",
+  "POST open.feishu.cn ^/open-apis/slides_ai/v1/xml_presentations$",
+  "POST open.feishu.cn ^/open-apis/slides_ai/v1/xml_presentations/[^/]+/slide$",
+  "POST open.feishu.cn ^/open-apis/slides_ai/v1/xml_presentations/[^/]+/slide/replace$",
+  "PUT open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields/[^/]+$",
+  "PUT open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/records/[^/]+$",
+  "PUT open.feishu.cn ^/open-apis/sheets/v2/spreadsheets/[^/]+/values$",
 ] as const;
 
 /** NEVER-derived calls from tickets 01, 05, and 07. None of these may match the allowlist. */
@@ -116,11 +155,12 @@ const NEVER_CALLS: Array<[string, string]> = [
   ["DELETE", "https://open.feishu.cn/open-apis/wiki/v2/spaces/spc/nodes/wikcn"],
   ["POST", "https://open.feishu.cn/open-apis/wiki/v2/nodes/wikcn/move_wiki_to_docs"],
   ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=folder"],
-  ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=sheet"],
   ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=docx&type=folder"],
   ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn"],
   ["POST", "https://open.feishu.cn/open-apis/drive/v1/trash/empty"],
   ["POST", "https://open.feishu.cn/open-apis/drive/explorer/v2/file/delete"],
+  ["POST", "https://open.feishu.cn/open-apis/mindnote/v1/mindnotes/bmncnEXAMPLE/nodes"],
+  ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=mindnote"],
 ];
 
 describe("endpoint allowlist", () => {
@@ -130,6 +170,10 @@ describe("endpoint allowlist", () => {
       expect(isEndpointAllowed(method, url)).toBe(false);
     }
     expect(isEndpointAllowed("DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=docx")).toBe(true);
+    expect(isEndpointAllowed("DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=sheet")).toBe(true);
+    expect(isEndpointAllowed("DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=bitable")).toBe(true);
+    expect(isEndpointAllowed("DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=slides")).toBe(true);
+    expect(isEndpointAllowed("DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=file")).toBe(true);
   });
 });
 

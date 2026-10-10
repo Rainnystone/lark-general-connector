@@ -7,16 +7,23 @@ import { callGetUser, callSearchUsers } from "./contacts";
 import { callFetchDocMedia } from "./doc-media";
 import { callFetchDoc, callGetDocComments, callListWikiDocs, callSearchDocs } from "./doc-read";
 import { callDeleteDoc } from "./doc-delete";
+import { BITABLE_ACTIONS, WRITE_BITABLE_ACTIONS, callReadBitable, callWriteBitable } from "./doc-bitable";
+import { FILE_ACTIONS, WRITE_FILE_ACTIONS, callReadFile, callWriteFile } from "./doc-file";
+import { MINDNOTE_ACTIONS, callReadMindnote } from "./doc-mindnote";
+import { callReadSheet, callWriteSheet, INSERT_DATA_OPTIONS, SHEET_ACTIONS, VALUE_RENDER_OPTIONS, WRITE_SHEET_ACTIONS } from "./doc-sheet";
+import { SLIDES_ACTIONS, WRITE_SLIDES_ACTIONS, callReadSlides, callWriteSlides } from "./doc-slides";
 import { callAddDocComment, callCreateDoc, callUpdateDoc, UPDATE_DOC_MODES } from "./doc-write";
 import { callWhoami } from "./tools";
 
 export const SERVER_INSTRUCTIONS =
-  "This server acts as the owner in Feishu. It reads and writes the owner's docs. Chats are read-only: it cannot send or change messages. Delete moves one cloud-space docx to the recycle bin only when the exact title is confirmed. Wiki docs are never deleted.";
+  "This server acts as the owner in Feishu. It reads and writes the owner's docs. Chats are read-only: it cannot send or change messages. Delete moves one cloud-space docx, sheet, Base, slides, or file to the recycle bin only when the exact title is confirmed. Wiki docs are never deleted.";
 
 const readOnly = { readOnlyHint: true, destructiveHint: false, openWorldHint: true } as const;
 const writing = { readOnlyHint: false, destructiveHint: false, openWorldHint: true } as const;
 const destructive = { readOnlyHint: false, destructiveHint: true, openWorldHint: true } as const;
 const deleteDocAnnotations = { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true } as const;
+const DOC_TYPE_ROUTING =
+  "Only docx content is returned. For sheet use read_sheet, bitable read_bitable, slides read_slides, file read_file, mindnote read_mindnote.";
 
 export function createFeishuServer(env: Env, openId: string): McpServer {
   const server = new McpServer({ name: "lark-general-connector", version: "0.1.0" }, { instructions: SERVER_INSTRUCTIONS });
@@ -48,7 +55,7 @@ export function createFeishuServer(env: Env, openId: string): McpServer {
     {
       title: "Read a Feishu doc",
       description:
-        "Read a Feishu doc from its URL or token. offset and limit count Unicode code points and are passed to Feishu. When limit is omitted or larger than one page, one page that fits the response cap is requested. If more remains, the result includes next_offset.",
+        `Read a Feishu doc from its URL or token. offset and limit count Unicode code points and are passed to Feishu. When limit is omitted or larger than one page, one page that fits the response cap is requested. If more remains, the result includes next_offset. ${DOC_TYPE_ROUTING}`,
       annotations: readOnly,
       inputSchema: z.object({
         doc: z.string(),
@@ -62,7 +69,7 @@ export function createFeishuServer(env: Env, openId: string): McpServer {
     "list_wiki_docs",
     {
       title: "List wiki docs",
-      description: "List docs in a wiki space or under a wiki node.",
+      description: `List docs in a wiki space or under a wiki node. ${DOC_TYPE_ROUTING}`,
       annotations: readOnly,
       inputSchema: z.object({
         space_id: z.string().optional(),
@@ -157,6 +164,161 @@ export function createFeishuServer(env: Env, openId: string): McpServer {
     async (args) => callSearchUsers(env, openId, args),
   );
   server.registerTool(
+    "read_sheet",
+    {
+      title: "Read a Feishu sheet",
+      description:
+        "Read a Feishu sheet from a URL, wiki node token, or sheet token. Call action meta first to get sheet_id. action values reads range sheetId!A1:C2. Use value_render_option FormattedValue (or UnformattedValue) to get computed values; ToString (default) returns the formula text. Formula returns the formula itself.",
+      annotations: readOnly,
+      inputSchema: z.object({
+        doc: z.string(),
+        action: z.enum(SHEET_ACTIONS),
+        range: z.string().optional(),
+        value_render_option: z.enum(VALUE_RENDER_OPTIONS).optional(),
+      }),
+    },
+    async (args) => callReadSheet(env, openId, args),
+  );
+  server.registerTool(
+    "write_sheet",
+    {
+      title: "Write a Feishu sheet",
+      description:
+        'Create or write a Feishu sheet from a URL, wiki node token, or sheet token. action create uses title and optional folder_token (default root). put overwrites range sheetId!A1:C2. append uses insert_data_option INSERT_ROWS or OVERWRITE. batch_update writes value_ranges. Cell values are forwarded as-is. A plain string "=..." is stored as text; formulas need {type:"formula",text}.',
+      annotations: destructive,
+      inputSchema: z.object({
+        action: z.enum(WRITE_SHEET_ACTIONS),
+        doc: z.string().optional(),
+        title: z.string().optional(),
+        folder_token: z.string().optional(),
+        range: z.string().optional(),
+        values: z.array(z.array(z.any())).optional(),
+        insert_data_option: z.enum(INSERT_DATA_OPTIONS).optional(),
+        value_ranges: z.array(z.object({ range: z.string(), values: z.array(z.array(z.any())) })).optional(),
+      }),
+    },
+    async (args) => callWriteSheet(env, openId, args),
+  );
+  server.registerTool(
+    "read_bitable",
+    {
+      title: "Read a Feishu Base",
+      description:
+        "Read a Feishu Base (bitable) from a URL, wiki node token, or app token. action app returns app info. action tables and fields pass page_token through. action records reads Base v3 records (offset, limit ≤ 200, optional view_id) in Feishu's columnar shape (fields, field_type_list, record_id_list, data, has_more). table_id is required for fields and records.",
+      annotations: readOnly,
+      inputSchema: z.object({
+        doc: z.string(),
+        action: z.enum(BITABLE_ACTIONS),
+        table_id: z.string().optional(),
+        page_token: z.string().optional(),
+        offset: z.number().int().optional(),
+        limit: z.number().int().optional(),
+        view_id: z.string().optional(),
+      }),
+    },
+    async (args) => callReadBitable(env, openId, args),
+  );
+  server.registerTool(
+    "write_bitable",
+    {
+      title: "Write a Feishu Base",
+      description:
+        "Create or write a Feishu Base (bitable) from a URL, wiki node token, or app token. action create_app uses name and optional folder_token (default root). A new Base's default table has about 10 empty rows. create_field uses table_id, field_name, type, and optional property. create_record uses table_id and fields. update_record uses table_id, record_id, and fields. update_field uses table_id, field_id, field_name, type, and optional property. delete_field and delete_record are irreversible, need no title confirmation, and are allowed on wiki-hosted Bases.",
+      annotations: destructive,
+      inputSchema: z.object({
+        action: z.enum(WRITE_BITABLE_ACTIONS),
+        doc: z.string().optional(),
+        name: z.string().optional(),
+        folder_token: z.string().optional(),
+        table_id: z.string().optional(),
+        field_name: z.string().optional(),
+        type: z.number().int().optional(),
+        property: z.record(z.string(), z.any()).optional(),
+        fields: z.record(z.string(), z.any()).optional(),
+        record_id: z.string().optional(),
+        field_id: z.string().optional(),
+      }),
+    },
+    async (args) => callWriteBitable(env, openId, args),
+  );
+  server.registerTool(
+    "read_slides",
+    {
+      title: "Read a Feishu slides deck",
+      description:
+        "Read a Feishu slides deck from a URL, wiki node token, or slides token. action get returns Feishu SML XML content, presentation_id, and revision_id as-is.",
+      annotations: readOnly,
+      inputSchema: z.object({
+        doc: z.string(),
+        action: z.enum(SLIDES_ACTIONS),
+      }),
+    },
+    async (args) => callReadSlides(env, openId, args),
+  );
+  server.registerTool(
+    "write_slides",
+    {
+      title: "Write a Feishu slides deck",
+      description:
+        "Create a Feishu slides deck, add a slide from <slide> XML, replace a whole slide, or delete a slide page. action create takes title and writes a blank deck in the cloud-space root. action add_slide takes doc, slide XML, and optional before_slide_id. action replace_slide takes doc, slide_id, and full <slide> XML and sends it as replacement (not content). action delete_slide takes doc and slide_id and is irreversible; it does not ask for a title. doc is a URL, wiki node token, or slides token. Wiki-hosted decks can be edited.",
+      annotations: destructive,
+      inputSchema: z.object({
+        action: z.enum(WRITE_SLIDES_ACTIONS),
+        doc: z.string().optional(),
+        title: z.string().optional(),
+        slide: z.string().optional(),
+        slide_id: z.string().optional(),
+        before_slide_id: z.string().optional(),
+      }),
+    },
+    async (args) => callWriteSlides(env, openId, args),
+  );
+  server.registerTool(
+    "read_file",
+    {
+      title: "Read a Feishu file",
+      description:
+        "Read a Feishu file from a URL, wiki node token, or file token. action meta returns title, type, url, and times. Files are raw bytes. action download returns content_base64 for files up to 256 KiB that fit the tool output, plus text for UTF-8 textual files (.md .txt .csv .json). Larger files return too_large:true and no bytes.",
+      annotations: readOnly,
+      inputSchema: z.object({
+        doc: z.string(),
+        action: z.enum(FILE_ACTIONS),
+      }),
+    },
+    async (args) => callReadFile(env, openId, args),
+  );
+  server.registerTool(
+    "write_file",
+    {
+      title: "Write a Feishu file",
+      description:
+        "Upload a file to the owner's cloud space. action upload takes file_name, content_base64 (decoded size ≤ 10 MiB), and optional folder_token (default root). Files are raw bytes. Updating a file means re-uploading; that creates a new file_token. The old file stays until the owner deletes it with delete_doc.",
+      annotations: writing,
+      inputSchema: z.object({
+        action: z.enum(WRITE_FILE_ACTIONS),
+        file_name: z.string(),
+        content_base64: z.string(),
+        folder_token: z.string().optional(),
+      }),
+    },
+    async (args) => callWriteFile(env, openId, args),
+  );
+  server.registerTool(
+    "read_mindnote",
+    {
+      title: "Read a Feishu mindnote",
+      description:
+        "Read a Feishu mindnote from a URL, wiki node token, or mindnote token. action nodes lists nodes. page_token is passed through. Mindnote is read-only.",
+      annotations: readOnly,
+      inputSchema: z.object({
+        doc: z.string(),
+        action: z.enum(MINDNOTE_ACTIONS),
+        page_token: z.string().optional(),
+      }),
+    },
+    async (args) => callReadMindnote(env, openId, args),
+  );
+  server.registerTool(
     "fetch_doc_media",
     {
       title: "Fetch doc image/whiteboard",
@@ -227,7 +389,7 @@ export function createFeishuServer(env: Env, openId: string): McpServer {
     {
       title: "Move a doc to the recycle bin",
       description:
-        "Move one docx in the owner's cloud space to the recycle bin (回收站), where it can be restored. Wiki docs are refused. Requires the doc's exact title.",
+        "Move one docx, sheet, bitable, slides, or file in the owner's cloud space to the recycle bin (回收站), where it can be restored. Wiki docs are refused. Requires the doc's exact title.",
       annotations: deleteDocAnnotations,
       inputSchema: z.object({
         doc: z.string(),

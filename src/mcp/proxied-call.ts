@@ -18,6 +18,7 @@ const OPEN_ERROR_HINTS: Record<number, string> = {
   99992364: "nonexistent or cross-tenant id",
   1770002: "not found",
   1770003: "deleted",
+  99991679: "re-authorize the connector to grant new scopes",
 };
 
 function scrubOpenMsg(msg: string): string {
@@ -95,7 +96,22 @@ export class AccessLost extends Error {
   }
 }
 
-export type RunnableToolName = ProxiedToolName | "list_chats" | "list_chat_messages" | "search_messages" | "get_message" | "delete_doc";
+export type RunnableToolName =
+  | ProxiedToolName
+  | "list_chats"
+  | "list_chat_messages"
+  | "search_messages"
+  | "get_message"
+  | "delete_doc"
+  | "read_sheet"
+  | "write_sheet"
+  | "read_bitable"
+  | "write_bitable"
+  | "read_slides"
+  | "write_slides"
+  | "read_file"
+  | "write_file"
+  | "read_mindnote";
 
 function isProxiedTool(tool: RunnableToolName): tool is ProxiedToolName {
   switch (tool) {
@@ -104,6 +120,15 @@ function isProxiedTool(tool: RunnableToolName): tool is ProxiedToolName {
     case "search_messages":
     case "get_message":
     case "delete_doc":
+    case "read_sheet":
+    case "write_sheet":
+    case "read_bitable":
+    case "write_bitable":
+    case "read_slides":
+    case "write_slides":
+    case "read_file":
+    case "write_file":
+    case "read_mindnote":
       return false;
     case "search_docs":
     case "fetch_doc":
