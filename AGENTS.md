@@ -99,7 +99,7 @@ On the wrangler path, after a successful deploy, put the four values. stdin only
 
 The human runs the `FEISHU_APP_SECRET` command and pastes the App Secret from the app's Credentials page in the console. The human also runs the `FEISHU_APP_ID` command, except on the Lark CLI path, where you pipe the App ID yourself: `printf '%s' <app-id> | npx wrangler secret put FEISHU_APP_ID --name <worker-name>`. The App ID is not a secret. Run the `COOKIE_SECRET` pipe yourself, and do not capture the `openssl` output. Pipe `pending` into the `OWNER_OPEN_ID` command yourself: `printf pending | npx wrangler secret put OWNER_OPEN_ID --name <worker-name>`. `pending` is not an open_id. Nobody can connect yet. The wizard puts these four values itself, in this order, with `COOKIE_SECRET` generated inside the process.
 
-Print the console URL, the three hosts, `<origin>/callback`, and every line in the Scopes block. Stop. Wait for the human. The human enables every scope in that block, and on an app created by hand, no others. The wizard waits on "Add the scopes".
+Print the console URL, the three hosts, `<origin>/callback`, and every line in the Scopes block. Stop. Wait for the human. The human enables every scope in that block, and on an app created by hand, no others. They can bulk-import `scopes.import.json` in Permissions & Scopes (批量导入). The wizard waits on "Add the scopes".
 
 Lark CLI path: run `lark-cli --profile <profile> auth scopes --json` first, compare its user scopes with the Scopes block, and print only the missing lines. When none are missing, tell the human this part is done. Then have the human open Permissions, switch to the app-identity (tenant_access_token) tab, and remove every scope there before step 4.
 
@@ -138,11 +138,15 @@ Stop. Wait for the human. The value must be an open_id: `ou_` plus letters and d
 
 Stop. Wait for the human. The human disconnects the client and connects again to the same `/mcp` URL. The wizard prints that URL again after the owner is saved.
 
-Contacts and chats stay read-only. Do not add message send, or chat create, update, or delete. Doc delete only moves one cloud-space docx to the recycle bin after the exact title is confirmed. Wiki docs are never deletable. Do not change the owner gate, the kill switch, the subrequest budget, or the audit logs. Secrets stay in Cloudflare encrypted secrets.
+Contacts and chats stay read-only. Do not add message send, or chat create, update, or delete. Doc delete only moves one cloud-space docx, sheet, bitable, slides or file to the recycle bin after the exact title is confirmed. Wiki docs are never deletable. Do not change the owner gate, the kill switch, the subrequest budget, or the audit logs. Secrets stay in Cloudflare encrypted secrets.
+
+## Upgrade an existing Worker
+
+If this Worker is already deployed, redeploy, have the human enable the new scopes (or bulk-import `scopes.import.json` again), publish a new app version, then disconnect and reconnect the client. Do not skip publish.
 
 ## Scopes
 
-Enable every line below. On an app created by hand, enable no others. This block is `FEISHU_SCOPES` in `src/scopes.ts`.
+Enable every line below. On an app created by hand, enable no others. This block is `FEISHU_SCOPES` in `src/scopes.ts`. The human can bulk-import `scopes.import.json` in Permissions & Scopes (批量导入).
 
 ```scopes
 search:docs:read

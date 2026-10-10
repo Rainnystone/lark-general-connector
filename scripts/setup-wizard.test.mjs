@@ -289,6 +289,8 @@ test("a new Worker name deploys, prints the region guide, and sends secrets only
   assert.match(asked, /Create the app/);
   assert.match(asked, /开通权限/);
   assert.match(asked, /Add the scopes/);
+  assert.match(asked, /scopes\.import\.json/);
+  assert.match(asked, /批量导入/);
   assert.match(asked, /设置重定向/);
   assert.match(asked, /Set the redirect/);
   assert.match(asked, /发布/);
