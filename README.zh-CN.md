@@ -61,13 +61,13 @@
 
 | 方式 | 你要做什么 | 额外需要 | 适合谁 |
 | --- | --- | --- | --- |
-| **A. 交给 AI 编码助手**（最省事） | 把一段话发给 AI，它负责下载代码和部署；你只需要在飞书和 Claude/ChatGPT 里点几下，再亲手输入密钥 | 一个能在电脑上执行命令的 AI 编码助手（Claude Code、Codex 等），以及 Node.js 22.6 或更新版本 | 已经在用 AI 编码助手的人 |
+| **A. 交给 AI 编码助手**（最省事） | 把一段话发给 AI，之后基本不用管。中途它会请你点几下确认，再请你粘贴一次 App Secret | 一个能在电脑上执行命令的 AI 编码助手（Claude Code、Codex 等），以及 Node.js 22.6 或更新版本 | 已经在用 AI 编码助手的人 |
 | **B. 一键部署按钮** | 在网页上点按钮、填表，电脑上什么都不用装 | 一个 GitHub 账号 | 有 GitHub 账号、不想装软件的人 |
 | **C. 命令行向导** | 在终端里运行一条命令，跟着中英文提示一步步走 | Node.js 22.6 或更新版本 | 习惯用终端的人 |
 
 Node.js 可以到 <https://nodejs.org> 下载 LTS 版本。方式 A 和 C 都不需要 GitHub 账号。**选一种就好，不要混着用。**
 
-三种方式走的都是同一套 8 步流程，区别只在于谁来做第 ② 步"部署"：
+三种方式走的都是同一套 8 步流程，区别在于有多少步有人替你做。方式 A 最省事（以飞书为例）：AI 会替你发起 ① 建应用，你点链接确认即可；② 由 AI 完成；AI 还会提前设置好你的身份，所以 ⑥⑦⑧ 通常直接跳过。方式 B 和 C 按顺序一步步来。
 
 ```
 ① 在飞书创建应用  →  ② 部署到 Cloudflare  →  ③ 回飞书填回调地址
@@ -86,18 +86,18 @@ Node.js 可以到 <https://nodejs.org> 下载 LTS 版本。方式 A 和 C 都不
 2. 在一个空文件夹里打开你的 AI 编码助手，把下面这段话发给它：
 
    ```
-   请把 https://github.com/Rainnystone/lark-general-connector 下载到当前文件夹，然后按仓库里的 AGENTS.zh-CN.md，把它部署到我自己的 Cloudflare 账号。需要我操作的步骤请停下来等我。
+   请把 https://github.com/Rainnystone/lark-general-connector 下载到当前文件夹，然后按仓库里的 AGENTS.md，把它部署到我自己的 Cloudflare 账号。需要我操作的步骤请停下来等我。
    ```
 
-3. 跟着它的提示走。分工是这样的：
-   - **AI 负责**：下载代码、登录 Cloudflare（会打开浏览器让你点授权）、检查名称、部署，并把回调地址、权限清单和 `/mcp` 地址打印给你。
-   - **你负责**：飞书开放平台里的操作（①③④），在 Claude 或 ChatGPT 里连接（⑤⑥），以及**亲手输入密钥**。App ID、App Secret 和 open_id 都由你自己在终端里输入，不要发在对话里。AI 会告诉你在哪里输入。
+3. 之后基本不用管。中途它会请你点几下确认：比如点链接创建飞书应用、授权 Cloudflare、在飞书后台填回调地址并发布、在 Claude 或 ChatGPT 里连接。App Secret 需要你从飞书后台复制，粘贴到它指定的终端里，**不要发在对话里**。
 
-每一步具体点哪里，AI 会把你指到下面[部署步骤](#部署步骤)里对应编号的说明。[AGENTS.zh-CN.md](./AGENTS.zh-CN.md) 就是写给 AI 看的那份部署手册。
+自动的步骤万一没成功，AI 会带你改走下面[部署步骤](#部署步骤)里的手动做法。[AGENTS.md](./AGENTS.md) 是写给 AI 看的部署手册。
 
 ### 方式 B：一键部署按钮
 
 1. 先做完下面[部署步骤](#部署步骤)的第 ① 步，拿到 App ID 和 App Secret。
+
+   > 小提示：电脑上装了 Node.js 的话，也可以在终端运行 `npx @larksuite/cli config init --new --name lark-connector`（Lark 用户在末尾加上 `--brand lark`），按提示确认，用飞书官方的 Lark CLI 创建应用。结束时它会显示 App ID 和 App Secret；App Secret 也可以在飞书后台这个应用的 **凭证与基础信息** 页找到。
 2. 点这个按钮：
 
    [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Rainnystone/lark-general-connector)
@@ -146,6 +146,8 @@ Node.js 可以到 <https://nodejs.org> 下载 LTS 版本。方式 A 和 C 都不
 
 ### ① 在飞书创建应用
 
+> 方式 A：AI 会用飞书官方的 Lark CLI 替你创建应用，你点它给的链接确认即可，不用做下面的 1、2。第 3 步的 App Secret 仍需你复制，AI 会告诉你什么时候要。
+
 1. 打开飞书开放平台：飞书用户打开 <https://open.feishu.cn/app>，Lark 用户打开 <https://open.larksuite.com/app>。
 2. 点 **创建企业自建应用**，名字随便起（比如"我的 AI 连接器"）。
 3. 进入应用，打开 **凭证与基础信息** 页面，记下 **App ID** 和 **App Secret**。部署时要用。
@@ -176,6 +178,8 @@ Node.js 可以到 <https://nodejs.org> 下载 LTS 版本。方式 A 和 C 都不
 2. **开机器人能力。** 发布之前，在自建应用里开通机器人能力（Bot）。（在 **添加应用能力** 里找到"机器人"并添加。）飞书的消息接口要求开通此能力：不开通的话，读取会话会报错 230006（Bot ability is not activated）。
 3. **发布。** 打开 **版本管理与发布**，创建一个版本并发布。如果你在公司的飞书里，这一步可能需要管理员审批，等审批通过再继续。
 
+> 方式 A，或用 Lark CLI 创建应用时：新应用一开始几乎没有权限，上面清单里的要全部开通（方式 A 里 AI 会告诉你还缺哪几项）。另外检查 **应用身份权限（tenant_access_token）** 页签，**里面有的都要删掉**：连接器一个都不用，而它们只凭 App ID 和 App Secret 就能使用。
+
 ### ⑤ 在 Claude 或 ChatGPT 里连接
 
 把下面这个地址添加为自定义连接器（具体怎么加见[连接到 Claude 或 ChatGPT](#连接到-claude-或-chatgpt)）：
@@ -188,6 +192,8 @@ Node.js 可以到 <https://nodejs.org> 下载 LTS 版本。方式 A 和 C 都不
 
 ### ⑥ 看到"Owner not configured"页面 —— 这是正常的
 
+> 方式 A 通常不会看到这个页面：AI 已经提前设置好你的身份，第 ⑤ 步会直接登录成功，⑥⑦⑧ 都可以跳过。如果还是看到了，照下面做。
+
 登录后你会看到一个标题为 **Owner not configured** 的页面，写着这个飞书账号不是主人，下面还有一行：
 
 ```
@@ -198,7 +204,8 @@ open_id: ou_xxxxxxxxxxxxxxxx
 
 ### ⑦ 把 open_id 填回去
 
-- **方式 A 和 C**：AI 或向导会让你在终端里输入它，输入时不显示。
+- **方式 A**：AI 通常已经替你设置好了。没设置好时，它会请你在终端里输入，输入时不显示。
+- **方式 C**：向导会请你在终端里输入它，输入时不显示。
 - **方式 B**：在 Cloudflare 网页里改：
   1. 打开 Cloudflare 控制台 <https://dash.cloudflare.com>，进入 **Workers & Pages**，点开你的连接器。
   2. 进入 **Settings（设置）→ Variables and Secrets（变量和机密）**。
@@ -344,7 +351,7 @@ Worker 同时是连接器客户端的 OAuth 授权服务器，以及 `/mcp` 上�
 
 ### 权限清单
 
-在飞书开放平台的应用里开通下面每一项，不要多开。这份清单与 `src/scopes.ts` 一致，向导和 [AGENTS.zh-CN.md](./AGENTS.zh-CN.md) 打印的也是同一份。
+在飞书开放平台的应用里开通下面每一项，不要多开。这份清单与 `src/scopes.ts` 一致，向导和 [AGENTS.md](./AGENTS.md) 打印的也是同一份。
 
 ```scopes
 search:docs:read
