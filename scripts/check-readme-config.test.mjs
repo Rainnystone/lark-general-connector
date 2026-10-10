@@ -1,5 +1,5 @@
 // Seam: scanReadmeConfig, the README config-name check in the repo scan.
-// Catches a README config name the code does not declare, and a code var or secret either language section omits.
+// Catches a README config name the code does not declare, and a code var or secret either language file omits.
 // Misses prose parity (disclaimers, architecture) beyond those names.
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
@@ -30,11 +30,18 @@ const emptyCode = {
   "package.json": "{}\n",
 };
 
+function readmes(english, chinese) {
+  return {
+    "README.md": english,
+    "README.zh-CN.md": chinese,
+  };
+}
+
 test("reports a README config name that is not in the code", async () => {
   await withTree(
     {
       ...emptyCode,
-      "README.md": "## English\n\n`ENABLE_PROBE`\n\n## 中文\n\n`ENABLE_PROBE`\n",
+      ...readmes("`ENABLE_PROBE`\n", "`ENABLE_PROBE`\n"),
     },
     async (root) => {
       const failures = scanReadmeConfig(root);
@@ -48,12 +55,12 @@ test("reports a secret in .dev.vars.example the README does not document", async
     {
       ...emptyCode,
       ".dev.vars.example": "FEISHU_APP_ID=\n",
-      "README.md": "## English\n\n## 中文\n",
+      ...readmes("", ""),
     },
     async (root) => {
       const failures = scanReadmeConfig(root);
-      assert.ok(failures.some((line) => /FEISHU_APP_ID/.test(line) && /English/.test(line)));
-      assert.ok(failures.some((line) => /FEISHU_APP_ID/.test(line) && /中文/.test(line)));
+      assert.ok(failures.some((line) => line === "README.md does not document FEISHU_APP_ID"));
+      assert.ok(failures.some((line) => line === "README.zh-CN.md does not document FEISHU_APP_ID"));
     },
   );
 });
@@ -63,11 +70,11 @@ test("reports an env.ts string var and ignores the OAuth helper", async () => {
     {
       ...emptyCode,
       "src/env.ts": `interface Env {\n  MCP_DISABLED: string;\n  OAUTH_PROVIDER?: OAuthHelpers;\n}\n`,
-      "README.md": "## English\n\n## 中文\n",
+      ...readmes("", ""),
     },
     async (root) => {
       const failures = scanReadmeConfig(root);
-      assert.ok(failures.some((line) => /MCP_DISABLED/.test(line) && /English/.test(line)));
+      assert.ok(failures.some((line) => line === "README.md does not document MCP_DISABLED"));
       assert.equal(failures.some((line) => /OAUTH_PROVIDER/.test(line)), false);
     },
   );
@@ -81,12 +88,12 @@ test("reports a wrangler binding the README does not document", async () => {
   "kv_namespaces": [{ "binding": "OAUTH_KV" }],
   "durable_objects": { "bindings": [{ "name": "FEISHU_TOKENS", "class_name": "FeishuTokenStore" }] }
 }\n`,
-      "README.md": "## English\n\n## 中文\n",
+      ...readmes("", ""),
     },
     async (root) => {
       const failures = scanReadmeConfig(root);
-      assert.ok(failures.some((line) => /OAUTH_KV/.test(line) && /English/.test(line)));
-      assert.ok(failures.some((line) => /FEISHU_TOKENS/.test(line) && /中文/.test(line)));
+      assert.ok(failures.some((line) => line === "README.md does not document OAUTH_KV"));
+      assert.ok(failures.some((line) => line === "README.zh-CN.md does not document FEISHU_TOKENS"));
       assert.equal(failures.some((line) => /FeishuTokenStore/.test(line)), false);
     },
   );
@@ -97,23 +104,22 @@ test("reports a package.json binding the README does not document", async () => 
     {
       ...emptyCode,
       "package.json": `{ "cloudflare": { "bindings": { "PUBLIC_URL": { "description": "origin" } } } }\n`,
-      "README.md": "## English\n\n## 中文\n",
+      ...readmes("", ""),
     },
     async (root) => {
       const failures = scanReadmeConfig(root);
-      assert.ok(failures.some((line) => /PUBLIC_URL/.test(line) && /English/.test(line)));
-      assert.ok(failures.some((line) => /PUBLIC_URL/.test(line) && /中文/.test(line)));
+      assert.ok(failures.some((line) => line === "README.md does not document PUBLIC_URL"));
+      assert.ok(failures.some((line) => line === "README.zh-CN.md does not document PUBLIC_URL"));
     },
   );
 });
 
 test("accepts a README that documents every code config in both languages", async () => {
-  const documented = "## English\n\n`FEISHU_REGION` is `feishu`.\n\n## 中文\n\n`FEISHU_REGION` 为 `feishu`。\n";
   await withTree(
     {
       ...emptyCode,
       "wrangler.jsonc": "{\n  // committed\n  \"vars\": { \"FEISHU_REGION\": \"feishu\" }\n}\n",
-      "README.md": documented,
+      ...readmes("`FEISHU_REGION` is `feishu`.\n", "`FEISHU_REGION` 为 `feishu`。\n"),
     },
     async (root) => {
       assert.deepEqual(scanReadmeConfig(root), []);
@@ -127,11 +133,11 @@ test("reports a config documented in only one language", async () => {
     {
       ...emptyCode,
       "wrangler.jsonc": `{ "vars": { "FEISHU_REGION": "feishu" } }\n`,
-      "README.md": "## English\n\n`FEISHU_REGION`\n\n## 中文\n",
+      ...readmes("`FEISHU_REGION`\n", ""),
     },
     async (root) => {
       const failures = scanReadmeConfig(root);
-      assert.deepEqual(failures, ["README.md 中文 section does not document FEISHU_REGION"]);
+      assert.deepEqual(failures, ["README.zh-CN.md does not document FEISHU_REGION"]);
     },
   );
 });
@@ -141,7 +147,7 @@ test("reports wrangler config that does not parse", async () => {
     {
       ...emptyCode,
       "wrangler.jsonc": "{ not json\n",
-      "README.md": "## English\n\n## 中文\n",
+      ...readmes("", ""),
     },
     async (root) => {
       const failures = scanReadmeConfig(root);
@@ -160,12 +166,12 @@ test("reports a code var the README does not document", async () => {
     {
       ...emptyCode,
       "wrangler.jsonc": `{ "vars": { "FEISHU_REGION": "feishu" } }\n`,
-      "README.md": "## English\n\n## 中文\n",
+      ...readmes("", ""),
     },
     async (root) => {
       const failures = scanReadmeConfig(root);
-      assert.ok(failures.some((line) => /FEISHU_REGION/.test(line) && /English/.test(line)));
-      assert.ok(failures.some((line) => /FEISHU_REGION/.test(line) && /中文/.test(line)));
+      assert.ok(failures.some((line) => line === "README.md does not document FEISHU_REGION"));
+      assert.ok(failures.some((line) => line === "README.zh-CN.md does not document FEISHU_REGION"));
     },
   );
 });

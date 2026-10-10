@@ -39,10 +39,10 @@ test("package.json prompts for the deploy bindings in Chinese and English", () =
   assert.match(bindings.OWNER_OPEN_ID.description, /pending/);
 });
 
-test("wrangler config omits PUBLIC_URL, has previews, and auto-provisions KV", () => {
+test("wrangler config omits PUBLIC_URL and auto-provisions KV", () => {
   const config = parseJsonc(read("wrangler.jsonc"));
   assert.equal(Object.hasOwn(config.vars, "PUBLIC_URL"), false);
-  assert.deepEqual(config.previews, {});
+  assert.equal(Object.hasOwn(config, "previews"), false);
   assert.equal(config.account_id, undefined);
   assert.deepEqual(config.kv_namespaces, [{ binding: "OAUTH_KV" }]);
 });
