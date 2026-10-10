@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 import { isEndpointAllowed } from "../src/feishu/client";
+import { BODY_CHAR_LIMIT } from "../src/feishu/payload";
 import slidesGet from "./fixtures/doc-types/slides-xml-presentation-get.json" with { type: "json" };
 import { OUTPUT_LIMIT } from "../src/mcp/tools";
 import { callTool, listTools, logLines, login, toolText, useFakeFeishu } from "./support";
@@ -96,6 +97,31 @@ describe("read_slides", () => {
     expect(text).not.toContain("[truncated; ask for the next page]");
     const parsed = JSON.parse(text) as Record<string, unknown>;
     expect(parsed).toEqual({ too_large: true });
+    expect((response.body as { result?: { isError?: boolean } }).result?.isError).not.toBe(true);
+  });
+
+  it("returns too_large when a successful deck body is truncated before parse", async () => {
+    const { accessToken } = await login();
+    fake.extra = (method, url) => {
+      if (method === "GET" && url.pathname === GET_PATH) {
+        return Response.json({
+          code: 0,
+          data: {
+            xml_presentation: {
+              content: "x".repeat(BODY_CHAR_LIMIT),
+              presentation_id: SLIDES_TOKEN,
+              revision_id: 1,
+            },
+          },
+        });
+      }
+      return undefined;
+    };
+    const response = await callTool(accessToken, "read_slides", { doc: SLIDES_TOKEN, action: "get" });
+    const text = toolText(response.body);
+    expect(text.length).toBeLessThanOrEqual(OUTPUT_LIMIT);
+    expect(text).not.toContain("[truncated; ask for the next page]");
+    expect(JSON.parse(text)).toEqual({ too_large: true });
     expect((response.body as { result?: { isError?: boolean } }).result?.isError).not.toBe(true);
   });
 

@@ -132,11 +132,11 @@ async function readSlides(client: FeishuClient, accessToken: string, args: ReadS
   switch (args.action) {
     case "get": {
       const result = await feishuOpen(client, "GET", slidesGetUrl(token), accessToken);
-      if (result.status === 429 || result.code !== 0 || result.rawText !== undefined) {
-        return { target: token, call: fromOpen(result, "") };
-      }
       if (result.parsed === false) {
         return { target: token, call: { kind: "done", text: JSON.stringify({ too_large: true }), isError: false } };
+      }
+      if (result.status === 429 || result.code !== 0 || result.rawText !== undefined) {
+        return { target: token, call: fromOpen(result, "") };
       }
       const text = JSON.stringify(result.data);
       if (text.length > OUTPUT_LIMIT) {
