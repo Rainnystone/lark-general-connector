@@ -41,7 +41,7 @@ The Lark CLI is https://github.com/larksuite/cli. Below, `lark-cli` means the in
 - **Browser confirmations.** `config init --new` and `auth login` wait for the human to confirm in the browser. Run `config init --new` in the background and read the verification URL from its output. Run `auth login` with `--no-wait --json`, then `--device-code` once the human confirms. Give the human each URL verbatim. If `config init` refuses because it runs inside an agent workspace (`OPENCLAW_HOME` or `HERMES_HOME`), take the fallback; do not pass `--force-init` or run `config bind`.
 - **Narrow login.** `auth login` without `--scope` requests every scope the app has. Always pass `--scope contact:user.base:readonly`, and run `auth logout` as soon as the open_id is stored.
 - **App Secret.** Lark CLI keeps the App Secret in its own secure storage. Leave it there: nothing in this file reads it. The human copies the App Secret from the console into `wrangler secret put`. If any output ever shows an App Secret, do not repeat it, and tell the human to reset the App Secret in the console after setup.
-- **Extra scopes.** An app created by Lark CLI may already have many scopes enabled. The connector requests only the Scopes block at login, so extra scopes are not granted to it. Tell the human that removing them in the console is optional.
+- **Preset scopes.** An app created by Lark CLI may already have many scopes enabled. The connector uses no app-identity (tenant) scopes, and those work with the App ID and App Secret alone, with no user consent: the human removes every app-identity scope before publishing. Extra user-identity scopes need the owner's consent at each login, and the connector requests only the Scopes block, so removing those is optional.
 
 ## Deploy
 
@@ -101,7 +101,7 @@ The human runs the `FEISHU_APP_SECRET` command and pastes the App Secret from th
 
 Print the console URL, the three hosts, `<origin>/callback`, and every line in the Scopes block. Stop. Wait for the human. The human enables every scope in that block, and on an app created by hand, no others. The wizard waits on "Add the scopes".
 
-Lark CLI path: run `lark-cli --profile <profile> auth scopes --json` first, compare its user scopes with the Scopes block, and print only the missing lines. When none are missing, tell the human this part is done.
+Lark CLI path: run `lark-cli --profile <profile> auth scopes --json` first, compare its user scopes with the Scopes block, and print only the missing lines. When none are missing, tell the human this part is done. Then have the human open Permissions, switch to the app-identity (tenant_access_token) tab, and remove every scope there before step 4.
 
 ### 3. Set the redirect
 
@@ -114,9 +114,9 @@ Do this only after the redirect is saved. Stop. Wait for the human. The human en
 Lark CLI path: once the human has published, store the owner before anyone connects.
 
 1. `lark-cli --profile <profile> auth login --scope contact:user.base:readonly --no-wait --json`. Give the human the verification URL. Stop. Wait for the human.
-2. `lark-cli --profile <profile> auth login --device-code <device-code>`.
-3. `lark-cli --profile <profile> auth status --json | node --experimental-strip-types scripts/owner-open-id.mjs | npx wrangler secret put OWNER_OPEN_ID --name <worker-name>`. The script passes exactly one open_id through and prints nothing else, so the open_id never enters your output. Never run the first two parts of this pipe on their own.
-4. `lark-cli --profile <profile> auth logout`.
+2. `lark-cli --profile <profile> auth login --device-code <device-code> >/dev/null 2>&1`. Its success message names the user and their open_id, so discard its output and check only the exit status.
+3. `lark-cli --profile <profile> auth status --json | node --experimental-strip-types scripts/owner-open-id.mjs | npx wrangler secret put OWNER_OPEN_ID --name <worker-name>`. The script passes exactly one open_id through and prints nothing else. Never run `auth status` or `auth login --device-code` with its output visible: either prints the open_id.
+4. `lark-cli --profile <profile> auth logout >/dev/null 2>&1`.
 
 If any of these fails, pipe `pending` into `OWNER_OPEN_ID` again and take the fallback: steps 6 and 7 below.
 
