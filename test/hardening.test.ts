@@ -24,6 +24,7 @@ const CATALOGUE = [
   { name: "read_sheet", title: "Read a Feishu sheet", readOnly: true, destructive: false },
   { name: "write_sheet", title: "Write a Feishu sheet", readOnly: false, destructive: false },
   { name: "read_bitable", title: "Read a Feishu Base", readOnly: true, destructive: false },
+  { name: "write_bitable", title: "Write a Feishu Base", readOnly: false, destructive: true },
   { name: "list_chats", title: "List my chats", readOnly: true, destructive: false },
   { name: "list_chat_messages", title: "Read chat messages", readOnly: true, destructive: false },
   { name: "search_messages", title: "Search my messages", readOnly: true, destructive: false },
@@ -72,6 +73,8 @@ describe("server instructions", () => {
  * A new Feishu call has to show up here before it can leave the Worker.
  */
 const ALLOWLIST = [
+  "DELETE open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields/[^/]+$",
+  "DELETE open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/records/[^/]+$",
   "DELETE open.feishu.cn ^/open-apis/drive/v1/files/[^/]+$ type=docx",
   "GET open.feishu.cn ^/open-apis/authen/v1/user_info$",
   "GET open.feishu.cn ^/open-apis/base/v3/bases/[^/]+/tables/[^/]+/records$",
@@ -95,6 +98,9 @@ const ALLOWLIST = [
   "GET open.feishu.cn ^/open-apis/wiki/v2/spaces/get_node$",
   "POST accounts.feishu.cn ^/oauth/v3/token$",
   "POST mcp.feishu.cn ^/mcp$",
+  "POST open.feishu.cn ^/open-apis/bitable/v1/apps$",
+  "POST open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields$",
+  "POST open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/records$",
   "POST open.feishu.cn ^/open-apis/docx/v1/documents$",
   "POST open.feishu.cn ^/open-apis/docx/v1/documents/[^/]+/blocks/[^/]+/children$",
   "POST open.feishu.cn ^/open-apis/drive/v1/files/[^/]+/comments$",
@@ -103,6 +109,8 @@ const ALLOWLIST = [
   "POST open.feishu.cn ^/open-apis/sheets/v2/spreadsheets/[^/]+/values_append$",
   "POST open.feishu.cn ^/open-apis/sheets/v2/spreadsheets/[^/]+/values_batch_update$",
   "POST open.feishu.cn ^/open-apis/sheets/v3/spreadsheets$",
+  "PUT open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields/[^/]+$",
+  "PUT open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/records/[^/]+$",
   "PUT open.feishu.cn ^/open-apis/sheets/v2/spreadsheets/[^/]+/values$",
 ] as const;
 

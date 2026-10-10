@@ -7,7 +7,7 @@ import { callGetUser, callSearchUsers } from "./contacts";
 import { callFetchDocMedia } from "./doc-media";
 import { callFetchDoc, callGetDocComments, callListWikiDocs, callSearchDocs } from "./doc-read";
 import { callDeleteDoc } from "./doc-delete";
-import { BITABLE_ACTIONS, callReadBitable } from "./doc-bitable";
+import { BITABLE_ACTIONS, WRITE_BITABLE_ACTIONS, callReadBitable, callWriteBitable } from "./doc-bitable";
 import { callReadSheet, callWriteSheet, INSERT_DATA_OPTIONS, SHEET_ACTIONS, VALUE_RENDER_OPTIONS, WRITE_SHEET_ACTIONS } from "./doc-sheet";
 import { callAddDocComment, callCreateDoc, callUpdateDoc, UPDATE_DOC_MODES } from "./doc-write";
 import { callWhoami } from "./tools";
@@ -212,6 +212,29 @@ export function createFeishuServer(env: Env, openId: string): McpServer {
       }),
     },
     async (args) => callReadBitable(env, openId, args),
+  );
+  server.registerTool(
+    "write_bitable",
+    {
+      title: "Write a Feishu Base",
+      description:
+        "Create or write a Feishu Base (bitable) from a URL, wiki node token, or app token. action create_app uses name and optional folder_token (default root). A new Base's default table has about 10 empty rows. create_field uses table_id, field_name, type, and optional property. create_record uses table_id and fields. update_record uses table_id, record_id, and fields. update_field uses table_id, field_id, field_name, type, and optional property. delete_field and delete_record are irreversible, need no title confirmation, and are allowed on wiki-hosted Bases.",
+      annotations: destructive,
+      inputSchema: z.object({
+        action: z.enum(WRITE_BITABLE_ACTIONS),
+        doc: z.string().optional(),
+        name: z.string().optional(),
+        folder_token: z.string().optional(),
+        table_id: z.string().optional(),
+        field_name: z.string().optional(),
+        type: z.number().int().optional(),
+        property: z.record(z.string(), z.any()).optional(),
+        fields: z.record(z.string(), z.any()).optional(),
+        record_id: z.string().optional(),
+        field_id: z.string().optional(),
+      }),
+    },
+    async (args) => callWriteBitable(env, openId, args),
   );
   server.registerTool(
     "fetch_doc_media",

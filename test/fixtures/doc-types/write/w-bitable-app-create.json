@@ -1,0 +1,11 @@
+{
+  "data": {
+    "app": {
+      "app_token": "bascnEXAMPLE",
+      "default_table_id": "tblEx1",
+      "folder_token": "fldcnEXAMPLE",
+      "name": "Example base",
+      "url": "https://example.feishu.cn/base/bascnEXAMPLE"
+    }
+  }
+}

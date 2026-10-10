@@ -20,6 +20,8 @@ interface AllowRule {
 }
 
 const ALLOWED: readonly AllowRule[] = [
+  { method: "DELETE", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields/[^/]+$" },
+  { method: "DELETE", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/records/[^/]+$" },
   { method: "DELETE", host: "open.feishu.cn", path: "^/open-apis/drive/v1/files/[^/]+$", query: "type=docx" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/authen/v1/user_info$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/base/v3/bases/[^/]+/tables/[^/]+/records$" },
@@ -43,6 +45,9 @@ const ALLOWED: readonly AllowRule[] = [
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/wiki/v2/spaces/get_node$" },
   { method: "POST", host: "accounts.feishu.cn", path: "^/oauth/v3/token$" },
   { method: "POST", host: "mcp.feishu.cn", path: "^/mcp$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/records$" },
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/docx/v1/documents$" },
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/docx/v1/documents/[^/]+/blocks/[^/]+/children$" },
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/drive/v1/files/[^/]+/comments$" },
@@ -51,6 +56,8 @@ const ALLOWED: readonly AllowRule[] = [
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/sheets/v2/spreadsheets/[^/]+/values_append$" },
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/sheets/v2/spreadsheets/[^/]+/values_batch_update$" },
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/sheets/v3/spreadsheets$" },
+  { method: "PUT", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields/[^/]+$" },
+  { method: "PUT", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/records/[^/]+$" },
   { method: "PUT", host: "open.feishu.cn", path: "^/open-apis/sheets/v2/spreadsheets/[^/]+/values$" },
 ];
 

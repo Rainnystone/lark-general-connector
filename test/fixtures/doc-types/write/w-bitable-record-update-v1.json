@@ -1,0 +1,12 @@
+{
+  "data": {
+    "record": {
+      "fields": {
+        "qty": 8,
+        "note": "example-row"
+      },
+      "id": "recEx1",
+      "record_id": "recEx1"
+    }
+  }
+}
