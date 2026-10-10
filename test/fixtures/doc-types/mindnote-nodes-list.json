@@ -1,0 +1,55 @@
+{
+  "code": 0,
+  "data": {
+    "has_more": null,
+    "nodes": [
+      {
+        "finish": false,
+        "images": [],
+        "node_id": "ndeEx1",
+        "notes": [],
+        "texts": [
+          {
+            "element_type": "text",
+            "style": {
+              "bold": true
+            },
+            "text": {
+              "content": "<text>"
+            }
+          }
+        ]
+      },
+      {
+        "finish": false,
+        "images": [],
+        "node_id": "ndeEx2",
+        "notes": [
+          {
+            "element_type": "text",
+            "text": {
+              "content": ""
+            }
+          }
+        ],
+        "texts": [
+          {
+            "element_type": "text",
+            "style": {
+              "bold": true
+            },
+            "text": {
+              "content": "<text>"
+            }
+          },
+          {
+            "element_type": "text",
+            "text": {
+              "content": "<text>"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

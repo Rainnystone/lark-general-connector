@@ -40,6 +40,7 @@ const ALLOWED: readonly AllowRule[] = [
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/im/v1/chats$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/im/v1/messages$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/im/v1/messages/om_[^/]+$" },
+  { method: "GET", host: "open.feishu.cn", path: "^/open-apis/mindnote/v1/mindnotes/[^/]+/nodes$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/search/v1/user$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/sheets/v2/spreadsheets/[^/]+/values/[^/]+$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/sheets/v3/spreadsheets/[^/]+/sheets/query$" },

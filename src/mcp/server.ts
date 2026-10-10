@@ -9,6 +9,7 @@ import { callFetchDoc, callGetDocComments, callListWikiDocs, callSearchDocs } fr
 import { callDeleteDoc } from "./doc-delete";
 import { BITABLE_ACTIONS, WRITE_BITABLE_ACTIONS, callReadBitable, callWriteBitable } from "./doc-bitable";
 import { FILE_ACTIONS, WRITE_FILE_ACTIONS, callReadFile, callWriteFile } from "./doc-file";
+import { MINDNOTE_ACTIONS, callReadMindnote } from "./doc-mindnote";
 import { callReadSheet, callWriteSheet, INSERT_DATA_OPTIONS, SHEET_ACTIONS, VALUE_RENDER_OPTIONS, WRITE_SHEET_ACTIONS } from "./doc-sheet";
 import { SLIDES_ACTIONS, WRITE_SLIDES_ACTIONS, callReadSlides, callWriteSlides } from "./doc-slides";
 import { callAddDocComment, callCreateDoc, callUpdateDoc, UPDATE_DOC_MODES } from "./doc-write";
@@ -299,6 +300,21 @@ export function createFeishuServer(env: Env, openId: string): McpServer {
       }),
     },
     async (args) => callWriteFile(env, openId, args),
+  );
+  server.registerTool(
+    "read_mindnote",
+    {
+      title: "Read a Feishu mindnote",
+      description:
+        "Read a Feishu mindnote from a URL, wiki node token, or mindnote token. action nodes lists nodes. page_token is passed through. Mindnote is read-only.",
+      annotations: readOnly,
+      inputSchema: z.object({
+        doc: z.string(),
+        action: z.enum(MINDNOTE_ACTIONS),
+        page_token: z.string().optional(),
+      }),
+    },
+    async (args) => callReadMindnote(env, openId, args),
   );
   server.registerTool(
     "fetch_doc_media",

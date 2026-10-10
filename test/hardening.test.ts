@@ -29,6 +29,7 @@ const CATALOGUE = [
   { name: "write_slides", title: "Write a Feishu slides deck", readOnly: false, destructive: true },
   { name: "read_file", title: "Read a Feishu file", readOnly: true, destructive: false },
   { name: "write_file", title: "Write a Feishu file", readOnly: false, destructive: false },
+  { name: "read_mindnote", title: "Read a Feishu mindnote", readOnly: true, destructive: false },
   { name: "list_chats", title: "List my chats", readOnly: true, destructive: false },
   { name: "list_chat_messages", title: "Read chat messages", readOnly: true, destructive: false },
   { name: "search_messages", title: "Search my messages", readOnly: true, destructive: false },
@@ -97,6 +98,7 @@ const ALLOWLIST = [
   "GET open.feishu.cn ^/open-apis/im/v1/chats$",
   "GET open.feishu.cn ^/open-apis/im/v1/messages$",
   "GET open.feishu.cn ^/open-apis/im/v1/messages/om_[^/]+$",
+  "GET open.feishu.cn ^/open-apis/mindnote/v1/mindnotes/[^/]+/nodes$",
   "GET open.feishu.cn ^/open-apis/search/v1/user$",
   "GET open.feishu.cn ^/open-apis/sheets/v2/spreadsheets/[^/]+/values/[^/]+$",
   "GET open.feishu.cn ^/open-apis/sheets/v3/spreadsheets/[^/]+/sheets/query$",
@@ -154,6 +156,8 @@ const NEVER_CALLS: Array<[string, string]> = [
   ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn"],
   ["POST", "https://open.feishu.cn/open-apis/drive/v1/trash/empty"],
   ["POST", "https://open.feishu.cn/open-apis/drive/explorer/v2/file/delete"],
+  ["POST", "https://open.feishu.cn/open-apis/mindnote/v1/mindnotes/bmncnEXAMPLE/nodes"],
+  ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=mindnote"],
 ];
 
 describe("endpoint allowlist", () => {
