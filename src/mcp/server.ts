@@ -9,7 +9,7 @@ import { callFetchDoc, callGetDocComments, callListWikiDocs, callSearchDocs } fr
 import { callDeleteDoc } from "./doc-delete";
 import { BITABLE_ACTIONS, WRITE_BITABLE_ACTIONS, callReadBitable, callWriteBitable } from "./doc-bitable";
 import { callReadSheet, callWriteSheet, INSERT_DATA_OPTIONS, SHEET_ACTIONS, VALUE_RENDER_OPTIONS, WRITE_SHEET_ACTIONS } from "./doc-sheet";
-import { SLIDES_ACTIONS, callReadSlides } from "./doc-slides";
+import { SLIDES_ACTIONS, WRITE_SLIDES_ACTIONS, callReadSlides, callWriteSlides } from "./doc-slides";
 import { callAddDocComment, callCreateDoc, callUpdateDoc, UPDATE_DOC_MODES } from "./doc-write";
 import { callWhoami } from "./tools";
 
@@ -250,6 +250,24 @@ export function createFeishuServer(env: Env, openId: string): McpServer {
       }),
     },
     async (args) => callReadSlides(env, openId, args),
+  );
+  server.registerTool(
+    "write_slides",
+    {
+      title: "Write a Feishu slides deck",
+      description:
+        "Create a Feishu slides deck, add a slide from <slide> XML, replace a whole slide, or delete a slide page. action create takes title and writes a blank deck in the cloud-space root. action add_slide takes doc, slide XML, and optional before_slide_id. action replace_slide takes doc, slide_id, and full <slide> XML and sends it as replacement (not content). action delete_slide takes doc and slide_id and is irreversible; it does not ask for a title. doc is a URL, wiki node token, or slides token. Wiki-hosted decks can be edited.",
+      annotations: destructive,
+      inputSchema: z.object({
+        action: z.enum(WRITE_SLIDES_ACTIONS),
+        doc: z.string().optional(),
+        title: z.string().optional(),
+        slide: z.string().optional(),
+        slide_id: z.string().optional(),
+        before_slide_id: z.string().optional(),
+      }),
+    },
+    async (args) => callWriteSlides(env, openId, args),
   );
   server.registerTool(
     "fetch_doc_media",
