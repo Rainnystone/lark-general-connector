@@ -20,7 +20,7 @@
 
 - [它能做什么、不能做什么](#它能做什么不能做什么)
 - [安全吗？](#安全吗)
-- [开始之前要准备什么](#开始之前要准备什么)
+- [怎么安装：三种方式选一种](#怎么安装三种方式选一种)
 - [部署步骤](#部署步骤)
 - [连接到 Claude 或 ChatGPT](#连接到-claude-或-chatgpt)
 - [常见问题](#常见问题)
@@ -49,58 +49,61 @@
 
 ---
 
-## 开始之前要准备什么
+## 怎么安装：三种方式选一种
+
+**不管选哪种，你都需要：**
 
 1. **一个 Cloudflare 账号**（免费版就够用）：<https://dash.cloudflare.com/sign-up>
-2. **一个能创建"企业自建应用"的飞书账号。** 如果你是所在飞书组织的管理员，可以自己创建并发布；如果是公司的飞书，发布时可能需要管理员审批（下面会说到）。
+2. **一个能创建"企业自建应用"的飞书账号。** 如果你是所在飞书组织的管理员，可以自己创建并发布；如果是公司的飞书，发布时可能需要管理员审批。
 3. **Claude 或 ChatGPT**，并且你的套餐支持添加自定义连接器。
 
-另外，按你选的部署方式（见下文），还需要：
+**三种方式的区别：**
 
-- **方式 A**：一个 GitHub 账号：<https://github.com/signup>
-- **方式 B 和 C**：电脑上装好 Node.js 22.6 或更新版本（到 <https://nodejs.org> 下载 LTS 版本）。不需要 GitHub 账号。
+| 方式 | 你要做什么 | 额外需要 | 适合谁 |
+| --- | --- | --- | --- |
+| **A. 交给 AI 编码助手**（最省事） | 把一段话发给 AI，它负责下载代码和部署；你只需要在飞书和 Claude/ChatGPT 里点几下，再亲手输入密钥 | 一个能在电脑上执行命令的 AI 编码助手（Claude Code、Codex 等），以及 Node.js 22.6 或更新版本 | 已经在用 AI 编码助手的人 |
+| **B. 一键部署按钮** | 在网页上点按钮、填表，电脑上什么都不用装 | 一个 GitHub 账号 | 有 GitHub 账号、不想装软件的人 |
+| **C. 命令行向导** | 在终端里运行一条命令，跟着中英文提示一步步走 | Node.js 22.6 或更新版本 | 习惯用终端的人 |
 
----
+Node.js 可以到 <https://nodejs.org> 下载 LTS 版本。方式 A 和 C 都不需要 GitHub 账号。**选一种就好，不要混着用。**
 
-## 部署步骤
-
-整体流程是这样的，**顺序不能乱**：
+三种方式走的都是同一套 8 步流程，区别只在于谁来做第 ② 步"部署"：
 
 ```
 ① 在飞书创建应用  →  ② 部署到 Cloudflare  →  ③ 回飞书填回调地址
 →  ④ 开通权限、开机器人能力、发布应用  →  ⑤ 在 Claude/ChatGPT 里连接
 →  ⑥ 页面会拒绝你并显示你的 open_id（这是正常的！）
-→  ⑦ 把 open_id 填回 Cloudflare  →  ⑧ 重新连接，完成
+→  ⑦ 把 open_id 填回去  →  ⑧ 重新连接，完成
 ```
 
 为什么第 ⑥ 步会被拒绝？因为一开始连接器还不知道"主人"是谁，所以谁都不让进，只告诉你"你的 ID 是这个"。你把这个 ID 填回去，连接器就认定你是唯一的主人了。
 
-部署有三种方式，**选一种就好，不要混着用**：
+选好之后，看对应的那一节就行。
 
-| 方式 | 适合谁 |
-| --- | --- |
-| **A. 一键部署按钮**（推荐） | 不写代码的人。全程在网页上操作。需要 GitHub 账号。 |
-| **B. 命令行向导** | 会用终端的人。向导会一步步提示，自动生成和保存密钥。 |
-| **C. 交给 AI 编码助手** | 在用 Claude Code、Codex 之类工具的人。复制一段话给它，它负责下载代码和部署，需要你动手时停下来等你。 |
+### 方式 A：交给 AI 编码助手
 
-下面按方式 A 详细讲 ①–⑧。方式 B 见[命令行向导](#方式-b命令行向导)，方式 C 见[交给 AI 编码助手](#方式-c交给-ai-编码助手)。不管走哪种方式，在飞书和 Claude/ChatGPT 里具体点哪里，都以下面 ①–⑧ 的说明为准。
+1. 装好 Node.js 22.6 或更新版本。
+2. 在一个空文件夹里打开你的 AI 编码助手，把下面这段话发给它：
 
-### ① 在飞书创建应用
+   ```
+   请把 https://github.com/Rainnystone/lark-general-connector 下载到当前文件夹，然后按仓库里的 AGENTS.zh-CN.md，把它部署到我自己的 Cloudflare 账号。需要我操作的步骤请停下来等我。
+   ```
 
-1. 打开飞书开放平台：飞书用户打开 <https://open.feishu.cn/app>，Lark 用户打开 <https://open.larksuite.com/app>。
-2. 点 **创建企业自建应用**，名字随便起（比如"我的 AI 连接器"）。
-3. 进入应用，打开 **凭证与基础信息** 页面，记下 **App ID** 和 **App Secret**。下一步要用。
+3. 跟着它的提示走。分工是这样的：
+   - **AI 负责**：下载代码、登录 Cloudflare（会打开浏览器让你点授权）、检查名称、部署，并把回调地址、权限清单和 `/mcp` 地址打印给你。
+   - **你负责**：飞书开放平台里的操作（①③④），在 Claude 或 ChatGPT 里连接（⑤⑥），以及**亲手输入密钥**。App ID、App Secret 和 open_id 都由你自己在终端里输入，不要发在对话里。AI 会告诉你在哪里输入。
 
-> ⚠️ App Secret 相当于密码，不要发给任何人，也不要贴到聊天里。
+每一步具体点哪里，AI 会把你指到下面[部署步骤](#部署步骤)里对应编号的说明。[AGENTS.zh-CN.md](./AGENTS.zh-CN.md) 就是写给 AI 看的那份部署手册。
 
-### ② 部署到 Cloudflare
+### 方式 B：一键部署按钮
 
-1. 点这个按钮：
+1. 先做完下面[部署步骤](#部署步骤)的第 ① 步，拿到 App ID 和 App Secret。
+2. 点这个按钮：
 
    [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Rainnystone/lark-general-connector)
 
-2. 按提示登录 Cloudflare 和 GitHub。按钮会把代码复制一份到你的 GitHub，并自动创建需要的存储。
-3. 页面会让你填几个值：
+3. 按提示登录 Cloudflare 和 GitHub。按钮会把代码复制一份到你的 GitHub，并自动创建需要的存储。
+4. 页面会让你填几个值：
 
    | 要填的项 | 填什么 |
    | --- | --- |
@@ -110,9 +113,52 @@
    | `OWNER_OPEN_ID` | 先填 `pending`（意思是"待定"），第 ⑦ 步再改 |
    | `FEISHU_REGION` | 飞书用户保持 `feishu` 不动；Lark 用户改成 `lark` |
 
-4. 展开 **Advanced settings（高级设置）**：选 **create new token**，并**关掉** **Enable preview builds**。
-5. 点部署，等它完成。
-6. 部署成功后，你会得到一个网址，形如 `https://lark-general-connector.<你的子域>.workers.dev`。**把这个网址记下来**，后面叫它"你的连接器地址"。
+5. 展开 **Advanced settings（高级设置）**：选 **create new token**，并**关掉** **Enable preview builds**。
+6. 点部署，等它完成。
+7. 接着做[部署步骤](#部署步骤)的 ③–⑧。
+
+### 方式 C：命令行向导
+
+1. 装好 Node.js 22.6 或更新版本。
+2. 把代码下载到本地，两种办法任选：
+   - 装了 git：在终端里运行 `git clone https://github.com/Rainnystone/lark-general-connector.git`，得到 `lark-general-connector` 文件夹。
+   - 没装 git：下载 <https://github.com/Rainnystone/lark-general-connector/archive/refs/heads/main.zip> 并解压，得到 `lark-general-connector-main` 文件夹。
+3. 在终端里进入这个文件夹，运行：
+
+   ```bash
+   npm ci && npm run setup
+   ```
+
+4. 跟着向导走。它用中英文双语提示：
+   - 帮你登录 Cloudflare（`wrangler login`）、部署，并在每个需要你去飞书操作的地方停下来等你。
+   - App ID、App Secret 和 open_id 在终端里输入，**输入时不显示、不写进任何文件**。
+   - 自动生成 `COOKIE_SECRET`，并先把 `OWNER_OPEN_ID` 设成 `pending`。
+   - 打印出回调地址、`/mcp` 地址和完整的权限清单，直接照着复制就行。
+   - 如果你起的 Worker 名称在账号里已经存在，会要求你把名字再输一遍确认，防止误覆盖。
+
+每一步具体点哪里，看下面的[部署步骤](#部署步骤)。
+
+---
+
+## 部署步骤
+
+三种方式共用这套步骤。第 ② 步和第 ⑦ 步按你选的方式做，其他步骤都一样。
+
+### ① 在飞书创建应用
+
+1. 打开飞书开放平台：飞书用户打开 <https://open.feishu.cn/app>，Lark 用户打开 <https://open.larksuite.com/app>。
+2. 点 **创建企业自建应用**，名字随便起（比如"我的 AI 连接器"）。
+3. 进入应用，打开 **凭证与基础信息** 页面，记下 **App ID** 和 **App Secret**。部署时要用。
+
+> ⚠️ App Secret 相当于密码，不要发给任何人，也不要贴到聊天里。
+
+### ② 部署到 Cloudflare
+
+- **方式 A**：AI 帮你部署。
+- **方式 B**：按上面[方式 B](#方式-b一键部署按钮)的说明点按钮、填表。
+- **方式 C**：向导帮你部署。
+
+部署成功后，你会得到一个网址，形如 `https://lark-general-connector.<你的子域>.workers.dev`。**把这个网址记下来**，后面叫它"你的连接器地址"。
 
 ### ③ 回飞书填回调地址
 
@@ -150,53 +196,19 @@ open_id: ou_xxxxxxxxxxxxxxxx
 
 **这正是我们要的。** 把 `ou_` 开头的那串字符复制下来，这就是你的飞书身份 ID。
 
-### ⑦ 把 open_id 填回 Cloudflare
+### ⑦ 把 open_id 填回去
 
-1. 打开 Cloudflare 控制台 <https://dash.cloudflare.com>，进入 **Workers & Pages**，点开你的连接器。
-2. 进入 **Settings（设置）→ Variables and Secrets（变量和机密）**。
-3. 找到 `OWNER_OPEN_ID`，把值从 `pending` 改成你刚才复制的 open_id，保存。
+- **方式 A 和 C**：AI 或向导会让你在终端里输入它，输入时不显示。
+- **方式 B**：在 Cloudflare 网页里改：
+  1. 打开 Cloudflare 控制台 <https://dash.cloudflare.com>，进入 **Workers & Pages**，点开你的连接器。
+  2. 进入 **Settings（设置）→ Variables and Secrets（变量和机密）**。
+  3. 找到 `OWNER_OPEN_ID`，把值从 `pending` 改成你刚才复制的 open_id，保存。
 
 ### ⑧ 重新连接
 
 回到 Claude 或 ChatGPT，**断开**这个连接器，再用同一个 `/mcp` 地址**重新连接**一次。这次登录就会成功。
 
 🎉 完成！现在你可以在对话里让 AI 帮你处理飞书了。
-
-### 方式 B：命令行向导
-
-需要 Node.js 22.6 或更新版本。先把代码下载到本地，两种办法任选：
-
-- 装了 git：在终端里运行 `git clone https://github.com/Rainnystone/lark-general-connector.git`，得到 `lark-general-connector` 文件夹。
-- 没装 git：下载 <https://github.com/Rainnystone/lark-general-connector/archive/refs/heads/main.zip> 并解压，得到 `lark-general-connector-main` 文件夹。
-
-然后在终端里进入这个文件夹，运行：
-
-```bash
-npm ci && npm run setup
-```
-
-向导用中英文双语提示，流程和上面 ①–⑧ 完全一样，区别是：
-
-- 它会帮你登录 Cloudflare（`wrangler login`）、部署，并在每个需要你去飞书操作的地方停下来等你。
-- App ID、App Secret 和 open_id 是在终端里输入的，**输入时不显示、不写进任何文件**。
-- `COOKIE_SECRET` 由向导自动生成，`OWNER_OPEN_ID` 也会自动先设成 `pending`。
-- 它会打印出回调地址、`/mcp` 地址和完整的权限清单，直接照着复制就行。
-- 如果你起的 Worker 名称在账号里已经存在，向导会要求你把名字再输一遍确认，防止误覆盖。
-
-### 方式 C：交给 AI 编码助手
-
-需要 Node.js 22.6 或更新版本，以及一个能在你电脑上执行命令的 AI 编码助手（比如 Claude Code、Codex）。
-
-在一个空文件夹里打开它，把下面这段话发给它：
-
-```
-请把 https://github.com/Rainnystone/lark-general-connector 下载到当前文件夹，然后按仓库里的 AGENTS.zh-CN.md，把它部署到我自己的 Cloudflare 账号。需要我操作的步骤请停下来等我。
-```
-
-[AGENTS.zh-CN.md](./AGENTS.zh-CN.md) 是写给 AI 看的部署手册。分工大致是：
-
-- **AI 负责**：下载代码、登录 Cloudflare（会打开浏览器让你点授权）、检查名称、部署，并把回调地址、权限清单和 `/mcp` 地址打印给你。
-- **你负责**：飞书开放平台里的操作（①③④），在 Claude 或 ChatGPT 里连接（⑤⑥），以及**亲手输入密钥**。App ID、App Secret 和 open_id 都由你自己在终端里输入，不要把它们发在对话里。AI 会告诉你在哪里输入。
 
 ---
 
