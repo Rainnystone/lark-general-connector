@@ -46,5 +46,6 @@ if (isMain) {
     stderr.write(`owner-open-id: ${result.error}\n`);
     exit(1);
   }
+  stderr.write("owner-open-id: lark-cli must be logged in with this connector's app\n");
   stdout.write(result.openId);
 }

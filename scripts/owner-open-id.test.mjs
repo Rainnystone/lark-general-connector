@@ -43,6 +43,7 @@ test("the CLI prints only the open_id, and on failure prints no id", () => {
   const ok = run('{"user":{"open_id":"ou_ownerExample1"}}');
   assert.equal(ok.status, 0);
   assert.equal(ok.stdout, "ou_ownerExample1");
+  assert.match(ok.stderr, /owner-open-id: lark-cli must be logged in with this connector's app\n/);
 
   const failed = run('{"users":[{"id":"ou_ownerExample1"},{"id":"ou_otherExample2"}]}');
   assert.equal(failed.status, 1);

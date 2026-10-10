@@ -206,6 +206,8 @@ open_id: ou_xxxxxxxxxxxxxxxx
 
 **这正是我们要的。** 把 `ou_` 开头的那串字符复制下来，这就是你的飞书身份 ID。
 
+飞书的 open_id 是按应用区分的，所以 `OWNER_OPEN_ID` 必须是**这个连接器自己的飞书应用**下的 open_id。从别的应用抄来的 open_id，会看到光秃秃的 "This Feishu account is not the owner." 页面。把 `OWNER_OPEN_ID` 改回 `pending`，登录一次就能看到正确的 open_id，再填回去。
+
 ### ⑦ 把 open_id 填回去
 
 - **方式 A**：AI 通常已经替你设置好了。没设置好时，它会请你在终端里输入，输入时不显示。
@@ -244,6 +246,8 @@ open_id: ou_xxxxxxxxxxxxxxxx
 ### 显示"This Feishu account is not the owner."
 
 你登录的飞书账号和 `OWNER_OPEN_ID` 里填的不是同一个人。换回主人的账号登录。
+
+飞书的 open_id 是按应用区分的，所以 `OWNER_OPEN_ID` 必须是**这个连接器自己的飞书应用**下的 open_id。从别的应用抄来的 open_id，也会看到这个光秃秃的页面（没有 `open_id:` 那一行）。把 `OWNER_OPEN_ID` 改回 `pending`，登录一次就能看到正确的 open_id，再填回去。
 
 ### AI 说"Feishu authorization expired; reconnect the connector"
 

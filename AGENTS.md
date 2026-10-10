@@ -124,7 +124,7 @@ If any of these fails, pipe `pending` into `OWNER_OPEN_ID` again and take the fa
 
 Print `<origin>/mcp`. Stop. Wait for the human. The human adds that URL to Claude or ChatGPT and starts login. Do not log in as the human. The wizard waits on "Connect a client".
 
-Lark CLI path: when the owner was stored in step 4, this login completes and the client lists the tools. Setup is done; skip steps 6 to 8. If the human sees `Owner not configured`, continue with step 6. If the human sees `This Feishu account is not the owner.` without an open_id, pipe `pending` into `OWNER_OPEN_ID`, have the human reconnect, and continue with step 6.
+Lark CLI path: when the owner was stored in step 4, this login completes and the client lists the tools. Setup is done; skip steps 6 to 8. If the human sees `Owner not configured`, continue with step 6. Feishu open_id is per-app, so `OWNER_OPEN_ID` must be the open_id under this connector's Feishu app. An open_id copied from another app gives the bare page `This Feishu account is not the owner.` If the human sees that page without an open_id, pipe `pending` into `OWNER_OPEN_ID`, have the human reconnect, and continue with step 6.
 
 ### 6. Bootstrap login shows open_id
 
@@ -132,7 +132,7 @@ The bootstrap page is HTTP 403. The title is `Owner not configured`. The body sa
 
 ### 7. Set OWNER_OPEN_ID
 
-Stop. Wait for the human. The value must be an open_id: `ou_` plus letters and digits. `pending` is not one. Do not copy it into chat or a file. On the wizard path, the human types it into the wizard prompt, which reads it without echoing. On the wrangler path, the human runs `npx wrangler secret put OWNER_OPEN_ID --name <worker-name>` and types it on stdin.
+Stop. Wait for the human. The value must be an open_id: `ou_` plus letters and digits. `pending` is not one. Feishu open_id is per-app, so this must be the open_id under this connector's Feishu app, not one copied from another app. Do not copy it into chat or a file. On the wizard path, the human types it into the wizard prompt, which reads it without echoing. On the wrangler path, the human runs `npx wrangler secret put OWNER_OPEN_ID --name <worker-name>` and types it on stdin.
 
 ### 8. Reconnect
 

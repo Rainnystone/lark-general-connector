@@ -206,6 +206,8 @@ open_id: ou_xxxxxxxxxxxxxxxx
 
 **This is exactly what we want.** Copy the string starting with `ou_`. That's your Feishu identity ID.
 
+Feishu open_id is per-app, so `OWNER_OPEN_ID` has to be the open_id under **this** connector's Feishu app. An open_id copied from another app gives the bare page "This Feishu account is not the owner." Set `OWNER_OPEN_ID` back to `pending`, log in once to see the correct open_id, then set it.
+
 ### ⑦ Save the open_id
 
 - **Path A**: usually already done for you. If not, the agent asks you to type it into the terminal. It isn't shown on screen.
@@ -244,6 +246,8 @@ The first time you connect, this is **expected**. See step ⑥. If you've alread
 ### It says "This Feishu account is not the owner."
 
 The Feishu account you logged in with isn't the one in `OWNER_OPEN_ID`. Log in with the owner's account.
+
+Feishu open_id is per-app, so `OWNER_OPEN_ID` has to be the open_id under **this** connector's Feishu app. An open_id copied from another app also gives this bare page, with no `open_id:` line. Set `OWNER_OPEN_ID` back to `pending`, log in once to see the correct open_id, then set it.
 
 ### The AI says "Feishu authorization expired; reconnect the connector"
 
