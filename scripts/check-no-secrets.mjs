@@ -1,6 +1,5 @@
-import { readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
-import { fileURLToPath } from "node:url";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join, relative } from "node:path";
 
 const skip = new Set(["node_modules", ".git", ".wrangler", "dist", "package-lock.json"]);
 const appId = /cli_[0-9a-f]{16}/i;
@@ -195,18 +194,9 @@ export function scanReadmeConfig(root) {
   return failures;
 }
 
-function invokedDirectly() {
-  const entry = process.argv[1];
-  if (!entry) return false;
-  try {
-    return realpathSync(entry) === realpathSync(fileURLToPath(import.meta.url));
-  } catch {
-    return false;
-  }
-}
-
-if (invokedDirectly()) {
-  const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const isMain = process.argv[1] && import.meta.url.endsWith(process.argv[1].replaceAll("\\", "/"));
+if (isMain) {
+  const root = new URL("..", import.meta.url).pathname;
   const failures = [...scanTree(root), ...scanReadmeConfig(root)];
   if (failures.length > 0) {
     console.error(failures.join("\n"));
