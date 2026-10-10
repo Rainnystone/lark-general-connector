@@ -44,7 +44,7 @@ Three paths. They share one order, below. Do not follow more than one path in th
 
 Create the app, deploy, set the redirect, publish, connect a client, bootstrap login shows the open_id, set `OWNER_OPEN_ID`, reconnect.
 
-`feishu` uses `https://open.feishu.cn/app`. `lark` uses `https://open.larksuite.com/app`. Enable every scope the wizard prints, and no others. The redirect URI is the Worker origin plus `/callback`. The client URL is that origin plus `/mcp`.
+`feishu` uses `https://open.feishu.cn/app`. `lark` uses `https://open.larksuite.com/app`. Enable every scope the wizard prints, and no others. The redirect URI is the Worker origin plus `/callback`. The client URL is that origin plus `/mcp`. Enable the Bot capability (机器人) on the custom app before publishing.
 
 ### Configuration
 
@@ -158,7 +158,7 @@ Worker 同时是连接器客户端的 OAuth 授权服务器，以及 `/mcp` 上�
 
 创建应用，部署，设置重定向，发布，连接客户端，引导登录显示 open_id，设置 `OWNER_OPEN_ID`，重新连接。
 
-`feishu` 使用 `https://open.feishu.cn/app`。`lark` 使用 `https://open.larksuite.com/app`。向导打印的每一项权限都要开通，不要多开。重定向 URI 是 Worker 源加上 `/callback`。客户端地址是该源加上 `/mcp`。
+`feishu` 使用 `https://open.feishu.cn/app`。`lark` 使用 `https://open.larksuite.com/app`。向导打印的每一项权限都要开通，不要多开。重定向 URI 是 Worker 源加上 `/callback`。客户端地址是该源加上 `/mcp`。发布之前，在自建应用里开通机器人能力（Bot）。
 
 ### 配置
 

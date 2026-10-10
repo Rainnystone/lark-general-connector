@@ -277,6 +277,11 @@ function discoveryPlan(mode: P2pDiscoveryMode, pageToken: string | undefined): D
   }
 }
 
+function groupListingNote(kind: ChatKind, error: FeishuCall | null): string {
+  if (kind !== "all" || error === null || error.kind !== "done") return "";
+  return `\n\ngroup listing failed: ${error.text}`;
+}
+
 function searchAfterPrimary(mode: P2pDiscoveryMode, primaryFailed: boolean, listingComplete: boolean, sawP2p: boolean): boolean {
   switch (mode) {
     case "auto":
@@ -418,6 +423,7 @@ async function listChats(client: FeishuClient, accessToken: string, args: ListCh
   let searchNote = "";
   let searchFooter = "";
   const listingComplete = !capped;
+  const groupNote = groupListingNote(kind, primaryError);
   if (includesP2p(kind) && (plan.forceSearch || searchAfterPrimary(mode, primaryFailed || (unavailable && listingComplete), listingComplete, sawP2p))) {
     const discovered = await discoverP2pChats(client, accessToken, ownerOpenId, plan.searchFrom);
     if (discovered.call) return discovered.call;
@@ -435,7 +441,7 @@ async function listChats(client: FeishuClient, accessToken: string, args: ListCh
     if (discovered.limited) searchNote += `\n\n${P2P_SEARCH_LIMIT}`;
     const origin = plan.showCursor(plan.searchFrom ?? "");
     const nextSearch = discovered.continuation === null ? null : plan.showCursor(discovered.continuation);
-    const extra = `${unavailable ? "\n\np2p listing unavailable" : ""}${searchNote}`;
+    const extra = `${groupNote}${unavailable ? "\n\np2p listing unavailable" : ""}${searchNote}`;
     const visiblePage = window.consumed
       ? []
       : window.blocks.map((block, index) => {
@@ -464,7 +470,7 @@ async function listChats(client: FeishuClient, accessToken: string, args: ListCh
     return { ...primaryError, text: `${primaryError.text}${searchNote}${searchFooter}` };
   }
   const note = unavailable ? "\n\np2p listing unavailable" : "";
-  const notes = `${note}${searchNote}`;
+  const notes = `${groupNote}${note}${searchNote}`;
   const footer = `${notes}${pageFooter(capped, continuation)}${searchFooter}`;
   return { kind: "done", text: finishRows(blocks, replays, footer, notes, "no chats"), isError: false };
 }

@@ -191,7 +191,7 @@ export async function runSetup({ io, run, bytes } = {}) {
   io.write(guide.text);
   await pause(io, "开通权限 Add the scopes：在应用里开通上面列出的每一项权限。\nAdd the scopes: enable every scope listed above.");
   await pause(io, "设置重定向 Set the redirect：把上面的 Redirect URI 填进应用的重定向 URL。\nSet the redirect: paste the Redirect URI above into the app.");
-  await pause(io, "发布或申请审核 Publish：发布应用，或按管理员要求申请权限。\nPublish the app, or apply for approval.");
+  await pause(io, "发布或申请审核 Publish：发布之前，在自建应用里开通机器人能力（Bot）。然后发布应用，或按管理员要求申请权限。\nPublish: enable the Bot capability (机器人) on the custom app before publishing. Then publish the app, or apply for approval.");
   const mcp = new URL("/mcp", origin).href;
   io.write(`先用这个地址连接客户端。 Connect a client at this address first.\nMCP: ${mcp}`);
   await pause(io, "连接客户端 Connect a client：把上面的 /mcp 地址加到 Claude 或 ChatGPT 并完成登录。页面会拒绝访问，且只显示你的 open_id。\nConnect a client: add the /mcp URL above to Claude or ChatGPT and finish login. The page denies access and shows only your open_id.");

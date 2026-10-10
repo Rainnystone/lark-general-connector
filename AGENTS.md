@@ -75,7 +75,7 @@ The redirect URI is `<origin>/callback`. Stop. Wait for the human. The human pas
 
 ### 4. Publish
 
-Do this only after the redirect is saved. Stop. Wait for the human. The human publishes the app, or requests the admin approval the console requires. The wizard waits on "Publish".
+Do this only after the redirect is saved. Stop. Wait for the human. The human enables the Bot capability (机器人) on the custom app before publishing, then publishes the app, or requests the admin approval the console requires. The wizard waits on "Publish".
 
 ### 5. Connect a client
 
@@ -166,7 +166,7 @@ Wrangler 路径：
 
 ### 4. 发布
 
-先保存重定向，再做这一步。停下来。等人类完成。人类发布应用，或按控制台要求申请管理员审批。向导在「发布」处等待。
+先保存重定向，再做这一步。停下来。等人类完成。人类在发布之前，于自建应用开通机器人能力（Bot），然后发布应用，或按控制台要求申请管理员审批。向导在「发布」处等待。
 
 ### 5. 连接客户端
 

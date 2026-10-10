@@ -451,7 +451,7 @@ describe("message search and p2p fallback", () => {
     expect(fake.calls.slice(failedBefore).some((call) => call.url.includes("/im/v1/messages/search"))).toBe(true);
     expect(failed).toContain("chat_id: oc_direct");
     expect(failed).toContain("discovered_via: search");
-    expect(failed).not.toContain("field validation failed");
+    expect(failed).toContain("group listing failed: Feishu error 99992402: field validation failed (validation)");
 
     fake.extra = (method, url) => {
       if (method === "GET" && url.pathname === "/open-apis/im/v1/chats") {
@@ -467,6 +467,38 @@ describe("message search and p2p fallback", () => {
     expect(limited).toContain("only chats with searchable messages");
     expect(limited).toContain("Message search is limited to 100 requests per minute.");
     expect(limited).not.toContain("frequency limit");
+  });
+
+  it("reports a failed group listing in kind=all while still listing p2p chats", async () => {
+    const { accessToken } = await login();
+    env.P2P_DISCOVERY = "auto";
+    fake.extra = (method, url) => {
+      if (method === "GET" && url.pathname === "/open-apis/im/v1/chats") {
+        return Response.json({ code: 232025, msg: "Bot ability is not activated" });
+      }
+      if (method === "GET" && url.pathname === "/open-apis/contact/v3/users/batch") {
+        return Response.json({ code: 0, data: { items: [{ open_id: "ou_ada", name: "Ada Lovelace" }] } });
+      }
+      if (method === "POST" && url.pathname === "/open-apis/im/v1/messages/search") {
+        return Response.json({
+          code: 0,
+          data: { items: [{ meta_data: { message_id: "om_ada", chat_id: "oc_direct", from_id: "ou_ada", is_p2p_chat: true } }] },
+        });
+      }
+      return undefined;
+    };
+    const response = await callTool(accessToken, "list_chats", { kind: "all" });
+    const text = toolText(response.body);
+    expect(text).toContain("chat_id: oc_direct");
+    expect(text).toContain("name: Ada Lovelace");
+    expect(text).toContain("group listing failed: Feishu error 232025: Bot ability is not activated");
+    expect((response.body as { result?: { isError?: boolean } }).result?.isError).not.toBe(true);
+
+    const grouped = await callTool(accessToken, "list_chats", { kind: "group" });
+    const groupedText = toolText(grouped.body);
+    expect(groupedText).toContain("Feishu error 232025: Bot ability is not activated");
+    expect(groupedText).not.toContain("oc_direct");
+    expect((grouped.body as { result?: { isError?: boolean } }).result?.isError).toBe(true);
   });
 
   it("does not search for p2p chats when the requested kind is group", async () => {

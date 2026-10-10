@@ -293,6 +293,8 @@ test("a new Worker name deploys, prints the region guide, and sends secrets only
   assert.match(asked, /Set the redirect/);
   assert.match(asked, /发布/);
   assert.match(asked, /Publish/);
+  assert.match(asked, /发布之前，在自建应用里开通机器人能力（Bot）/);
+  assert.match(asked, /enable the Bot capability \(机器人\) on the custom app before publishing/);
   assert.match(asked, /连接客户端/);
   assert.match(asked, /Connect a client/);
 });

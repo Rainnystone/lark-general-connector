@@ -77,6 +77,16 @@ test("locked rules are explicit in both languages", () => {
   assert.match(chinese, /不要自己输入已存在的 Worker 名称。/);
 });
 
+test("publish tells the human to enable the Bot capability first", () => {
+  assert.match(section("## English"), /enables the Bot capability \(机器人\) on the custom app before publishing/);
+  assert.match(section("## 中文"), /在发布之前，于自建应用开通机器人能力（Bot）/);
+  const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
+  const english = readme.slice(readme.indexOf("## English"), readme.indexOf("## 中文"));
+  const chinese = readme.slice(readme.indexOf("## 中文"));
+  assert.match(english, /Enable the Bot capability \(机器人\) on the custom app before publishing\./);
+  assert.match(chinese, /发布之前，在自建应用里开通机器人能力（Bot）。/);
+});
+
 test("human-only steps tell the agent to wait", () => {
   const englishWaits = section("## English").match(/Stop\. Wait for the human\./g) ?? [];
   const chineseWaits = section("## 中文").match(/停下来。等人类完成。/g) ?? [];
