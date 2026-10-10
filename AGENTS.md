@@ -1,10 +1,8 @@
 # Setup for a coding agent
 
-[中文](./AGENTS.zh-CN.md)
-
 This file is the deploy runbook. Follow it when the human asks you to deploy or set up this connector. For code changes, read `CONTEXT.md` and the tests instead: the deploy limits here (no code change, no commit, the files to leave alone) bind deployment only.
 
-Deploy this connector into the human's own Cloudflare account and their own Feishu or Lark app. This setup does not need a code change or a commit. The human usually does not code: keep each request to them short, give them exact links and commands, and do every other step yourself.
+Deploy this connector into the human's own Cloudflare account and their own Feishu or Lark app. This setup does not need a code change or a commit. The human usually does not code: talk to them in their own language, keep each request short, give them exact links and commands, and do every other step yourself.
 
 A later session has reached the bootstrap checkpoint when the human, on the Worker this session deployed, sees the 403 page titled `Owner not configured`. Do not stop the rest of the order there: set `OWNER_OPEN_ID`, then reconnect.
 

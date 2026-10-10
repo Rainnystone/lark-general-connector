@@ -351,7 +351,7 @@ Worker 同时是连接器客户端的 OAuth 授权服务器，以及 `/mcp` 上�
 
 ### 权限清单
 
-在飞书开放平台的应用里开通下面每一项，不要多开。这份清单与 `src/scopes.ts` 一致，向导和 [AGENTS.zh-CN.md](./AGENTS.zh-CN.md) 打印的也是同一份。
+在飞书开放平台的应用里开通下面每一项，不要多开。这份清单与 `src/scopes.ts` 一致，向导和 [AGENTS.md](./AGENTS.md) 打印的也是同一份。
 
 ```scopes
 search:docs:read
