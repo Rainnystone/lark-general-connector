@@ -1,0 +1,9 @@
+{
+  "data": {
+    "xml_presentation": {
+      "content": "<presentation id=\"sldcnEXAMPLE\" xmlns=\"https://www.larkoffice.com/sml/2.0\" width=\"960\" height=\"540\">\n  <title>Demo deck</title>\n  <slide id=\"sldEx1\">\n    <data>\n      <shape type=\"text\" id=\"shpEx1\">\n        <content>\n          <p><span>Agenda</span></p>\n        </content>\n      </shape>\n    </data>\n  </slide>\n</presentation>",
+      "presentation_id": "sldcnEXAMPLE",
+      "revision_id": 2
+    }
+  }
+}

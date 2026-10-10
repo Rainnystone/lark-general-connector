@@ -9,7 +9,7 @@ import type { AccessResult } from "../tokens/store";
 export const RECONNECT = "Feishu authorization expired; reconnect the connector";
 export const TOKEN_INVALID = new Set([99991663, 99991668, 99991677]);
 
-const OUTPUT_LIMIT = 100_000;
+export const OUTPUT_LIMIT = 100_000;
 const TRUNCATION_MARKER = "\n[truncated; ask for the next page]";
 const ROW_CURSOR = "rowcap:";
 const OWNED_PREFIXES = ["rowcap:", "p2pseen:", "p2psearch:"] as const;

@@ -9,6 +9,7 @@ import { callFetchDoc, callGetDocComments, callListWikiDocs, callSearchDocs } fr
 import { callDeleteDoc } from "./doc-delete";
 import { BITABLE_ACTIONS, WRITE_BITABLE_ACTIONS, callReadBitable, callWriteBitable } from "./doc-bitable";
 import { callReadSheet, callWriteSheet, INSERT_DATA_OPTIONS, SHEET_ACTIONS, VALUE_RENDER_OPTIONS, WRITE_SHEET_ACTIONS } from "./doc-sheet";
+import { SLIDES_ACTIONS, callReadSlides } from "./doc-slides";
 import { callAddDocComment, callCreateDoc, callUpdateDoc, UPDATE_DOC_MODES } from "./doc-write";
 import { callWhoami } from "./tools";
 
@@ -235,6 +236,20 @@ export function createFeishuServer(env: Env, openId: string): McpServer {
       }),
     },
     async (args) => callWriteBitable(env, openId, args),
+  );
+  server.registerTool(
+    "read_slides",
+    {
+      title: "Read a Feishu slides deck",
+      description:
+        "Read a Feishu slides deck from a URL, wiki node token, or slides token. action get returns Feishu SML XML content, presentation_id, and revision_id as-is.",
+      annotations: readOnly,
+      inputSchema: z.object({
+        doc: z.string(),
+        action: z.enum(SLIDES_ACTIONS),
+      }),
+    },
+    async (args) => callReadSlides(env, openId, args),
   );
   server.registerTool(
     "fetch_doc_media",
