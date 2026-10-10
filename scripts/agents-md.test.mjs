@@ -122,3 +122,30 @@ test("the README scope blocks are exactly FEISHU_SCOPES", () => {
     assert.deepEqual(scopesBlock(readme), [...FEISHU_SCOPES], name);
   }
 });
+
+function larkCliCommands(body) {
+  return [...body.matchAll(/`(lark-cli [^`]*)`/g)].map((match) => match[1]).filter((command) => command !== "lark-cli --version");
+}
+
+test("every Lark CLI command names the connector's own profile", () => {
+  for (const body of [english, chinese]) {
+    const commands = larkCliCommands(body);
+    assert.ok(commands.length >= 6, `lark-cli commands ${commands.length}`);
+    for (const command of commands) {
+      assert.match(command, /--(profile|name) <profile>/, command);
+    }
+  }
+});
+
+test("Lark CLI login is narrowed to one connector scope and logged out", () => {
+  assert.ok(FEISHU_SCOPES.includes("contact:user.base:readonly"));
+  for (const body of [english, chinese]) {
+    const logins = larkCliCommands(body).filter((command) => command.includes("auth login"));
+    assert.ok(logins.length >= 2);
+    for (const login of logins) {
+      assert.match(login, /--scope contact:user\.base:readonly|--device-code/, login);
+    }
+    assert.match(body, /auth logout/);
+    assert.match(body, /auth status --json \| node --experimental-strip-types scripts\/owner-open-id\.mjs \| npx wrangler secret put OWNER_OPEN_ID/);
+  }
+});
