@@ -115,3 +115,10 @@ test("the scope block is exactly FEISHU_SCOPES", () => {
   assert.deepEqual(scopesBlock(english), [...FEISHU_SCOPES]);
   assert.deepEqual(scopesBlock(chinese), [...FEISHU_SCOPES]);
 });
+
+test("the README scope blocks are exactly FEISHU_SCOPES", () => {
+  for (const name of ["../README.md", "../README.zh-CN.md"]) {
+    const readme = readFileSync(new URL(name, import.meta.url), "utf8");
+    assert.deepEqual(scopesBlock(readme), [...FEISHU_SCOPES], name);
+  }
+});
