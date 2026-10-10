@@ -80,7 +80,7 @@ describe("server instructions", () => {
 const ALLOWLIST = [
   "DELETE open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields/[^/]+$",
   "DELETE open.feishu.cn ^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/records/[^/]+$",
-  "DELETE open.feishu.cn ^/open-apis/drive/v1/files/[^/]+$ type=docx",
+  "DELETE open.feishu.cn ^/open-apis/drive/v1/files/[^/]+$ type=docx|sheet|bitable|slides|file",
   "DELETE open.feishu.cn ^/open-apis/slides_ai/v1/xml_presentations/[^/]+/slide$",
   "GET open.feishu.cn ^/open-apis/authen/v1/user_info$",
   "GET open.feishu.cn ^/open-apis/base/v3/bases/[^/]+/tables/[^/]+/records$",
@@ -151,7 +151,6 @@ const NEVER_CALLS: Array<[string, string]> = [
   ["DELETE", "https://open.feishu.cn/open-apis/wiki/v2/spaces/spc/nodes/wikcn"],
   ["POST", "https://open.feishu.cn/open-apis/wiki/v2/nodes/wikcn/move_wiki_to_docs"],
   ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=folder"],
-  ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=sheet"],
   ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=docx&type=folder"],
   ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn"],
   ["POST", "https://open.feishu.cn/open-apis/drive/v1/trash/empty"],
@@ -167,6 +166,10 @@ describe("endpoint allowlist", () => {
       expect(isEndpointAllowed(method, url)).toBe(false);
     }
     expect(isEndpointAllowed("DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=docx")).toBe(true);
+    expect(isEndpointAllowed("DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=sheet")).toBe(true);
+    expect(isEndpointAllowed("DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=bitable")).toBe(true);
+    expect(isEndpointAllowed("DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=slides")).toBe(true);
+    expect(isEndpointAllowed("DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=file")).toBe(true);
   });
 });
 

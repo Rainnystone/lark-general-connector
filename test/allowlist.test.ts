@@ -58,17 +58,15 @@ describe("endpoint allowlist", () => {
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
-  it("rejects wiki delete, non-docx drive delete, and trash endpoints before any network call", async () => {
+  it("rejects wiki delete, disallowed drive delete types, and trash endpoints before any network call", async () => {
     const fetchImpl = vi.fn(async () => new Response("nope"));
     const client = new FeishuClient({ fetchImpl });
     const forbidden: Array<[string, string]> = [
       ["DELETE", "https://open.feishu.cn/open-apis/wiki/v2/spaces/spc/nodes/wikcn"],
       ["POST", "https://open.feishu.cn/open-apis/wiki/v2/nodes/wikcn/move_wiki_to_docs"],
       ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=folder"],
-      ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=sheet"],
-      ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=bitable"],
       ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=doc"],
-      ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=file"],
+      ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=mindnote"],
       ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn"],
       ["DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=docx&type=folder"],
       ["POST", "https://open.feishu.cn/open-apis/drive/v1/trash/empty"],
@@ -80,8 +78,12 @@ describe("endpoint allowlist", () => {
     }
     expect(fetchImpl).not.toHaveBeenCalled();
     await client.request("DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=docx");
+    await client.request("DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=sheet");
+    await client.request("DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=bitable");
+    await client.request("DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=slides");
+    await client.request("DELETE", "https://open.feishu.cn/open-apis/drive/v1/files/doxcn?type=file");
     await client.request("GET", "https://open.feishu.cn/open-apis/docx/v1/documents/doxcn");
-    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(fetchImpl).toHaveBeenCalledTimes(6);
   });
 
   it("stops the 41st outbound call before fetch", async () => {

@@ -387,7 +387,7 @@ export function createFeishuServer(env: Env, openId: string): McpServer {
     {
       title: "Move a doc to the recycle bin",
       description:
-        "Move one docx in the owner's cloud space to the recycle bin (回收站), where it can be restored. Wiki docs are refused. Requires the doc's exact title.",
+        "Move one docx, sheet, bitable, slides, or file in the owner's cloud space to the recycle bin (回收站), where it can be restored. Wiki docs are refused. Requires the doc's exact title.",
       annotations: deleteDocAnnotations,
       inputSchema: z.object({
         doc: z.string(),

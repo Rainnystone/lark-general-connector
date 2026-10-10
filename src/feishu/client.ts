@@ -16,13 +16,13 @@ interface AllowRule {
   method: string;
   host: string;
   path: string;
-  query?: "type=docx";
+  query?: "type=docx|sheet|bitable|slides|file";
 }
 
 const ALLOWED: readonly AllowRule[] = [
   { method: "DELETE", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/fields/[^/]+$" },
   { method: "DELETE", host: "open.feishu.cn", path: "^/open-apis/bitable/v1/apps/[^/]+/tables/[^/]+/records/[^/]+$" },
-  { method: "DELETE", host: "open.feishu.cn", path: "^/open-apis/drive/v1/files/[^/]+$", query: "type=docx" },
+  { method: "DELETE", host: "open.feishu.cn", path: "^/open-apis/drive/v1/files/[^/]+$", query: "type=docx|sheet|bitable|slides|file" },
   { method: "DELETE", host: "open.feishu.cn", path: "^/open-apis/slides_ai/v1/xml_presentations/[^/]+/slide$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/authen/v1/user_info$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/base/v3/bases/[^/]+/tables/[^/]+/records$" },
@@ -80,9 +80,12 @@ export function endpointAllowlist(): readonly string[] {
   return ALLOWED.map(allowLine);
 }
 
-function docxDelete(params: URLSearchParams): boolean {
+const DRIVE_DELETE_TYPES = new Set(["docx", "sheet", "bitable", "slides", "file"]);
+
+function driveDeleteType(params: URLSearchParams): boolean {
   const types = params.getAll("type");
-  return types.length === 1 && types[0] === "docx";
+  const type = types[0];
+  return types.length === 1 && type !== undefined && DRIVE_DELETE_TYPES.has(type);
 }
 
 export class EndpointNotAllowedError extends Error {
@@ -111,8 +114,8 @@ export function isEndpointAllowed(method: string, url: string): boolean {
     if (entry.method !== verb || entry.host !== parsed.host || !new RegExp(entry.path).test(parsed.pathname)) return false;
     if (!entry.query) return true;
     switch (entry.query) {
-      case "type=docx":
-        return docxDelete(parsed.searchParams);
+      case "type=docx|sheet|bitable|slides|file":
+        return driveDeleteType(parsed.searchParams);
       default: {
         const unexpected: never = entry.query;
         return unexpected;
