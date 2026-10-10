@@ -156,7 +156,7 @@ describe("write_sheet", () => {
       range: PUT_RANGE,
       values: [["no"]],
     });
-    expect(toolText(mismatch.body)).toBe("this is a docx; use fetch_doc");
+    expect(toolText(mismatch.body)).toBe("this is a docx; use update_doc");
     expect((mismatch.body as { result?: { isError?: boolean } }).result?.isError).toBe(true);
     expect(fake.calls.slice(before).some((call) => call.method !== "GET" && call.url.includes("/sheets/"))).toBe(false);
   });

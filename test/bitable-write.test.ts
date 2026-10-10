@@ -246,7 +246,7 @@ describe("write_bitable", () => {
       table_id: TABLE_ID,
       fields: { qty: 7 },
     });
-    expect(toolText(mismatch.body)).toBe("this is a sheet; use read_sheet");
+    expect(toolText(mismatch.body)).toBe("this is a sheet; use write_sheet");
     expect((mismatch.body as { result?: { isError?: boolean } }).result?.isError).toBe(true);
     expect(fake.calls.slice(before).some((call) => call.method !== "GET" && call.url.includes("/bitable/"))).toBe(false);
   });

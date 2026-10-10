@@ -46,9 +46,19 @@ const READ_TOOL: Record<string, string> = {
   mindnote: "read_mindnote",
 };
 
-function typeMismatch(objType: string): FeishuCall {
+const WRITE_TOOL: Record<string, string> = {
+  docx: "update_doc",
+  doc: "update_doc",
+  sheet: "write_sheet",
+  bitable: "write_bitable",
+  slides: "write_slides",
+  file: "write_file",
+  mindnote: "read_mindnote",
+};
+
+function typeMismatch(objType: string, tools: Record<string, string>): FeishuCall {
   const label = objType.length > 0 ? objType : "unknown";
-  const tool = READ_TOOL[label];
+  const tool = tools[label];
   return { kind: "done", text: tool ? `this is a ${label}; use ${tool}` : `this is a ${label}`, isError: true };
 }
 
@@ -109,18 +119,23 @@ function valueRangeBody(range: string, values: unknown[][]): string {
   return JSON.stringify({ valueRange: { range, values } });
 }
 
-async function resolveSheet(client: FeishuClient, accessToken: string, doc: string): Promise<{ token: string } | FeishuCall> {
+async function resolveSheet(
+  client: FeishuClient,
+  accessToken: string,
+  doc: string,
+  tools: Record<string, string>,
+): Promise<{ token: string } | FeishuCall> {
   const fromPath = sheetPathToken(doc);
   if (fromPath) return { token: fromPath };
   const resolved = await resolveDoc(doc, (url) => feishuOpen(client, "GET", url, accessToken));
   if (!resolved.ok) return unresolvedDoc(resolved);
   if (resolved.objType === "sheet") return { token: resolved.token };
   if (!resolved.wikiNode && resolvesWikiNode(doc)) return { token: resolved.token };
-  return typeMismatch(resolved.objType);
+  return typeMismatch(resolved.objType, tools);
 }
 
 async function readSheet(client: FeishuClient, accessToken: string, args: ReadSheetArgs): Promise<{ target: string | null; call: FeishuCall }> {
-  const resolved = await resolveSheet(client, accessToken, args.doc);
+  const resolved = await resolveSheet(client, accessToken, args.doc, READ_TOOL);
   if ("kind" in resolved) return { target: parseDocRef(args.doc).token, call: resolved };
   const token = resolved.token;
   switch (args.action) {
@@ -164,7 +179,7 @@ async function writeSheet(client: FeishuClient, accessToken: string, args: Write
   }
   const doc = args.doc?.trim() ?? "";
   if (doc.length === 0) return { target: null, call: { kind: "done", text: "doc is required", isError: true } };
-  const resolved = await resolveSheet(client, accessToken, doc);
+  const resolved = await resolveSheet(client, accessToken, doc, WRITE_TOOL);
   if ("kind" in resolved) return { target: parseDocRef(doc).token, call: resolved };
   const token = resolved.token;
   switch (args.action) {

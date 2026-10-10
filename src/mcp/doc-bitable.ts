@@ -55,9 +55,19 @@ const READ_TOOL: Record<string, string> = {
   mindnote: "read_mindnote",
 };
 
-function typeMismatch(objType: string): FeishuCall {
+const WRITE_TOOL: Record<string, string> = {
+  docx: "update_doc",
+  doc: "update_doc",
+  sheet: "write_sheet",
+  bitable: "write_bitable",
+  slides: "write_slides",
+  file: "write_file",
+  mindnote: "read_mindnote",
+};
+
+function typeMismatch(objType: string, tools: Record<string, string>): FeishuCall {
   const label = objType.length > 0 ? objType : "unknown";
-  const tool = READ_TOOL[label];
+  const tool = tools[label];
   return { kind: "done", text: tool ? `this is a ${label}; use ${tool}` : `this is a ${label}`, isError: true };
 }
 
@@ -147,14 +157,19 @@ function recordsUrl(token: string, tableId: string, args: ReadBitableArgs): stri
   return url.toString();
 }
 
-async function resolveBitable(client: FeishuClient, accessToken: string, doc: string): Promise<{ token: string } | FeishuCall> {
+async function resolveBitable(
+  client: FeishuClient,
+  accessToken: string,
+  doc: string,
+  tools: Record<string, string>,
+): Promise<{ token: string } | FeishuCall> {
   const fromPath = bitablePathToken(doc);
   if (fromPath) return { token: fromPath };
   const resolved = await resolveDoc(doc, (url) => feishuOpen(client, "GET", url, accessToken));
   if (!resolved.ok) return unresolvedDoc(resolved);
   if (resolved.objType === "bitable") return { token: resolved.token };
   if (!resolved.wikiNode && resolvesWikiNode(doc)) return { token: resolved.token };
-  return typeMismatch(resolved.objType);
+  return typeMismatch(resolved.objType, tools);
 }
 
 function missingTableId(token: string): { target: string; call: FeishuCall } {
@@ -162,7 +177,7 @@ function missingTableId(token: string): { target: string; call: FeishuCall } {
 }
 
 async function readBitable(client: FeishuClient, accessToken: string, args: ReadBitableArgs): Promise<{ target: string | null; call: FeishuCall }> {
-  const resolved = await resolveBitable(client, accessToken, args.doc);
+  const resolved = await resolveBitable(client, accessToken, args.doc, READ_TOOL);
   if ("kind" in resolved) return { target: parseDocRef(args.doc).token, call: resolved };
   const token = resolved.token;
   switch (args.action) {
@@ -219,7 +234,7 @@ async function writeBitable(client: FeishuClient, accessToken: string, args: Wri
   }
   const doc = args.doc?.trim() ?? "";
   if (doc.length === 0) return missing(null, "doc is required");
-  const resolved = await resolveBitable(client, accessToken, doc);
+  const resolved = await resolveBitable(client, accessToken, doc, WRITE_TOOL);
   if ("kind" in resolved) return { target: parseDocRef(doc).token, call: resolved };
   const token = resolved.token;
   const tableId = args.table_id?.trim() ?? "";
