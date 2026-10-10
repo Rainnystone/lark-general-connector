@@ -35,6 +35,7 @@ const ALLOWED: readonly AllowRule[] = [
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/docx/v1/documents/[^/]+$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/docx/v1/documents/[^/]+/raw_content$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/drive/v1/files/[^/]+/comments$" },
+  { method: "GET", host: "open.feishu.cn", path: "^/open-apis/drive/v1/files/[^/]+/download$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/drive/v1/medias/[^/]+/download$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/im/v1/chats$" },
   { method: "GET", host: "open.feishu.cn", path: "^/open-apis/im/v1/messages$" },
@@ -53,6 +54,8 @@ const ALLOWED: readonly AllowRule[] = [
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/docx/v1/documents$" },
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/docx/v1/documents/[^/]+/blocks/[^/]+/children$" },
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/drive/v1/files/[^/]+/comments$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/drive/v1/files/upload_all$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/drive/v1/metas/batch_query$" },
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/im/v1/messages/search$" },
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/search/v2/doc_wiki/search$" },
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/sheets/v2/spreadsheets/[^/]+/values_append$" },
@@ -129,7 +132,7 @@ export class FeishuClient {
     this.fetchImpl = options?.fetchImpl ?? fetch.bind(globalThis);
   }
 
-  async request(method: string, url: string, init?: { headers?: HeadersInit; body?: string }): Promise<Response> {
+  async request(method: string, url: string, init?: { headers?: HeadersInit; body?: string | FormData }): Promise<Response> {
     if (!isEndpointAllowed(method, url)) {
       throw new EndpointNotAllowedError(method, url);
     }

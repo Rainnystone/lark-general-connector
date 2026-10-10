@@ -45,7 +45,24 @@ export function bytesToStandardBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-export async function readBoundedBytes(response: Response, cap: number): Promise<{ bytes: Uint8Array; size: number; overflow: boolean }> {
+export function standardBase64ToBytes(data: string): Uint8Array | null {
+  const trimmed = data.replace(/\s+/g, "");
+  if (trimmed.length === 0) return new Uint8Array();
+  if (trimmed.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(trimmed)) return null;
+  try {
+    const binary = atob(trimmed);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+    return bytes;
+  } catch {
+    return null;
+  }
+}
+
+export async function readBoundedBytes(
+  response: Response,
+  cap: number,
+): Promise<{ bytes: Uint8Array; size: number | null; overflow: boolean }> {
   const declared = declaredLength(response.headers.get("content-length"));
   if (declared !== null && declared > cap) {
     await response.body?.cancel();
@@ -65,13 +82,7 @@ export async function readBoundedBytes(response: Response, cap: number): Promise
       if (done) break;
       if (!value || value.byteLength === 0) continue;
       if (size + value.byteLength > cap) {
-        size += value.byteLength;
-        while (true) {
-          const next = await reader.read();
-          if (next.done) break;
-          if (next.value) size += next.value.byteLength;
-        }
-        return { bytes: new Uint8Array(), size: declared ?? size, overflow: true };
+        return { bytes: new Uint8Array(), size: declared, overflow: true };
       }
       chunks.push(value);
       size += value.byteLength;

@@ -108,7 +108,9 @@ export type RunnableToolName =
   | "read_bitable"
   | "write_bitable"
   | "read_slides"
-  | "write_slides";
+  | "write_slides"
+  | "read_file"
+  | "write_file";
 
 function isProxiedTool(tool: RunnableToolName): tool is ProxiedToolName {
   switch (tool) {
@@ -123,6 +125,8 @@ function isProxiedTool(tool: RunnableToolName): tool is ProxiedToolName {
     case "write_bitable":
     case "read_slides":
     case "write_slides":
+    case "read_file":
+    case "write_file":
       return false;
     case "search_docs":
     case "fetch_doc":

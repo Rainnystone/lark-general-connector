@@ -2,11 +2,18 @@ import { argumentError, capturedTool, FEISHU_MCP_TOOLS } from "./mcp-schema";
 
 export const MARKER = "MARKER_feishu_content_9f3a";
 
+export interface RecordedFormField {
+  value: string;
+  fileName?: string;
+  size?: number;
+}
+
 export interface RecordedCall {
   method: string;
   url: string;
   body: string;
   headers: Record<string, string>;
+  form?: Record<string, RecordedFormField>;
 }
 
 export class FakeFeishu {
@@ -56,14 +63,14 @@ export class FakeFeishu {
     const url = new URL(urlString);
     if (!url.hostname.endsWith("feishu.cn") && !url.hostname.endsWith("larksuite.com")) return original(input, init);
     const method = (init?.method ?? "GET").toUpperCase();
-    const body = typeof init?.body === "string" ? init.body : "";
+    const captured = await captureBody(init?.body);
     const headers = new Headers(init?.headers);
     const recorded: Record<string, string> = {};
     headers.forEach((value, key) => {
       recorded[key] = value;
     });
-    this.calls.push({ method, url: url.toString(), body, headers: recorded });
-    return this.respond(method, url, body);
+    this.calls.push({ method, url: url.toString(), body: captured.body, headers: recorded, form: captured.form });
+    return this.respond(method, url, captured.body);
   }
 
   private async respond(method: string, url: URL, body: string): Promise<Response> {
@@ -139,6 +146,25 @@ export class FakeFeishu {
     }
     throw new Error(`unexpected Feishu request: ${method} ${url.toString()}`);
   }
+}
+
+async function captureBody(raw: unknown): Promise<{ body: string; form?: Record<string, RecordedFormField> }> {
+  if (typeof raw === "string") return { body: raw };
+  if (!(raw instanceof FormData)) return { body: "" };
+  const form: Record<string, RecordedFormField> = {};
+  for (const [key, value] of raw.entries()) {
+    if (typeof value === "string") {
+      form[key] = { value };
+      continue;
+    }
+    const bytes = new Uint8Array(await value.arrayBuffer());
+    form[key] = {
+      value: new TextDecoder().decode(bytes),
+      fileName: value.name,
+      size: value.size,
+    };
+  }
+  return { body: "", form };
 }
 
 function mcpArgumentProblem(body: string): string | null {

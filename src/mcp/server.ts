@@ -8,6 +8,7 @@ import { callFetchDocMedia } from "./doc-media";
 import { callFetchDoc, callGetDocComments, callListWikiDocs, callSearchDocs } from "./doc-read";
 import { callDeleteDoc } from "./doc-delete";
 import { BITABLE_ACTIONS, WRITE_BITABLE_ACTIONS, callReadBitable, callWriteBitable } from "./doc-bitable";
+import { FILE_ACTIONS, WRITE_FILE_ACTIONS, callReadFile, callWriteFile } from "./doc-file";
 import { callReadSheet, callWriteSheet, INSERT_DATA_OPTIONS, SHEET_ACTIONS, VALUE_RENDER_OPTIONS, WRITE_SHEET_ACTIONS } from "./doc-sheet";
 import { SLIDES_ACTIONS, WRITE_SLIDES_ACTIONS, callReadSlides, callWriteSlides } from "./doc-slides";
 import { callAddDocComment, callCreateDoc, callUpdateDoc, UPDATE_DOC_MODES } from "./doc-write";
@@ -268,6 +269,36 @@ export function createFeishuServer(env: Env, openId: string): McpServer {
       }),
     },
     async (args) => callWriteSlides(env, openId, args),
+  );
+  server.registerTool(
+    "read_file",
+    {
+      title: "Read a Feishu file",
+      description:
+        "Read a Feishu file from a URL, wiki node token, or file token. action meta returns title, type, url, and times. Files are raw bytes. action download returns content_base64 for files up to 256 KiB that fit the tool output, plus text for UTF-8 textual files (.md .txt .csv .json). Larger files return too_large:true and no bytes.",
+      annotations: readOnly,
+      inputSchema: z.object({
+        doc: z.string(),
+        action: z.enum(FILE_ACTIONS),
+      }),
+    },
+    async (args) => callReadFile(env, openId, args),
+  );
+  server.registerTool(
+    "write_file",
+    {
+      title: "Write a Feishu file",
+      description:
+        "Upload a file to the owner's cloud space. action upload takes file_name, content_base64 (decoded size ≤ 10 MiB), and optional folder_token (default root). Files are raw bytes. Updating a file means re-uploading; that creates a new file_token. The old file stays until the owner deletes it with delete_doc.",
+      annotations: writing,
+      inputSchema: z.object({
+        action: z.enum(WRITE_FILE_ACTIONS),
+        file_name: z.string(),
+        content_base64: z.string(),
+        folder_token: z.string().optional(),
+      }),
+    },
+    async (args) => callWriteFile(env, openId, args),
   );
   server.registerTool(
     "fetch_doc_media",
