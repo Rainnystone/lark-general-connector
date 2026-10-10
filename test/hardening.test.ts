@@ -22,6 +22,7 @@ const CATALOGUE = [
   { name: "search_users", title: "Search colleagues", readOnly: true, destructive: false },
   { name: "fetch_doc_media", title: "Fetch doc image/whiteboard", readOnly: true, destructive: false },
   { name: "read_sheet", title: "Read a Feishu sheet", readOnly: true, destructive: false },
+  { name: "write_sheet", title: "Write a Feishu sheet", readOnly: false, destructive: false },
   { name: "list_chats", title: "List my chats", readOnly: true, destructive: false },
   { name: "list_chat_messages", title: "Read chat messages", readOnly: true, destructive: false },
   { name: "search_messages", title: "Search my messages", readOnly: true, destructive: false },
@@ -94,6 +95,10 @@ const ALLOWLIST = [
   "POST open.feishu.cn ^/open-apis/drive/v1/files/[^/]+/comments$",
   "POST open.feishu.cn ^/open-apis/im/v1/messages/search$",
   "POST open.feishu.cn ^/open-apis/search/v2/doc_wiki/search$",
+  "POST open.feishu.cn ^/open-apis/sheets/v2/spreadsheets/[^/]+/values_append$",
+  "POST open.feishu.cn ^/open-apis/sheets/v2/spreadsheets/[^/]+/values_batch_update$",
+  "POST open.feishu.cn ^/open-apis/sheets/v3/spreadsheets$",
+  "PUT open.feishu.cn ^/open-apis/sheets/v2/spreadsheets/[^/]+/values$",
 ] as const;
 
 /** NEVER-derived calls from tickets 01, 05, and 07. None of these may match the allowlist. */

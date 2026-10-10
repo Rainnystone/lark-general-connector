@@ -44,6 +44,10 @@ const ALLOWED: readonly AllowRule[] = [
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/drive/v1/files/[^/]+/comments$" },
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/im/v1/messages/search$" },
   { method: "POST", host: "open.feishu.cn", path: "^/open-apis/search/v2/doc_wiki/search$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/sheets/v2/spreadsheets/[^/]+/values_append$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/sheets/v2/spreadsheets/[^/]+/values_batch_update$" },
+  { method: "POST", host: "open.feishu.cn", path: "^/open-apis/sheets/v3/spreadsheets$" },
+  { method: "PUT", host: "open.feishu.cn", path: "^/open-apis/sheets/v2/spreadsheets/[^/]+/values$" },
 ];
 
 function allowLine(rule: AllowRule): string {

@@ -7,7 +7,7 @@ import { callGetUser, callSearchUsers } from "./contacts";
 import { callFetchDocMedia } from "./doc-media";
 import { callFetchDoc, callGetDocComments, callListWikiDocs, callSearchDocs } from "./doc-read";
 import { callDeleteDoc } from "./doc-delete";
-import { callReadSheet, SHEET_ACTIONS, VALUE_RENDER_OPTIONS } from "./doc-sheet";
+import { callReadSheet, callWriteSheet, INSERT_DATA_OPTIONS, SHEET_ACTIONS, VALUE_RENDER_OPTIONS, WRITE_SHEET_ACTIONS } from "./doc-sheet";
 import { callAddDocComment, callCreateDoc, callUpdateDoc, UPDATE_DOC_MODES } from "./doc-write";
 import { callWhoami } from "./tools";
 
@@ -172,6 +172,26 @@ export function createFeishuServer(env: Env, openId: string): McpServer {
       }),
     },
     async (args) => callReadSheet(env, openId, args),
+  );
+  server.registerTool(
+    "write_sheet",
+    {
+      title: "Write a Feishu sheet",
+      description:
+        'Create or write a Feishu sheet from a URL, wiki node token, or sheet token. action create uses title and optional folder_token (default root). put overwrites range sheetId!A1:C2. append uses insert_data_option INSERT_ROWS or OVERWRITE. batch_update writes value_ranges. Cell values are forwarded as-is. A plain string "=..." is stored as text; formulas need {type:"formula",text}.',
+      annotations: writing,
+      inputSchema: z.object({
+        action: z.enum(WRITE_SHEET_ACTIONS),
+        doc: z.string().optional(),
+        title: z.string().optional(),
+        folder_token: z.string().optional(),
+        range: z.string().optional(),
+        values: z.array(z.array(z.any())).optional(),
+        insert_data_option: z.enum(INSERT_DATA_OPTIONS).optional(),
+        value_ranges: z.array(z.object({ range: z.string(), values: z.array(z.array(z.any())) })).optional(),
+      }),
+    },
+    async (args) => callWriteSheet(env, openId, args),
   );
   server.registerTool(
     "fetch_doc_media",

@@ -103,7 +103,8 @@ export type RunnableToolName =
   | "search_messages"
   | "get_message"
   | "delete_doc"
-  | "read_sheet";
+  | "read_sheet"
+  | "write_sheet";
 
 function isProxiedTool(tool: RunnableToolName): tool is ProxiedToolName {
   switch (tool) {
@@ -113,6 +114,7 @@ function isProxiedTool(tool: RunnableToolName): tool is ProxiedToolName {
     case "get_message":
     case "delete_doc":
     case "read_sheet":
+    case "write_sheet":
       return false;
     case "search_docs":
     case "fetch_doc":
