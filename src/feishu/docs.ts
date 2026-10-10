@@ -16,6 +16,8 @@ export interface OpenPayload {
   rawText?: string;
   /** False when the body was not JSON, or was cut off before it could be parsed. */
   parsed?: boolean;
+  /** True when `readBoundedJson` cut the body at `BODY_CHAR_LIMIT`. */
+  truncated?: boolean;
 }
 
 function leadingBusinessCode(text: string): number | null {
@@ -46,7 +48,7 @@ export async function readOpenPayload(response: Response): Promise<OpenPayload> 
     const text = typeof bodyRead.value === "string" ? bodyRead.value : "";
     const parsedCode = asRecord(bodyRead.value).code;
     const businessCode = typeof parsedCode === "number" ? parsedCode : leadingBusinessCode(text);
-    return { status: response.status, code: errorCode(response.status, businessCode), msg: "", feishuError: isFeishuError(businessCode), data: {}, parsed: false };
+    return { status: response.status, code: errorCode(response.status, businessCode), msg: "", feishuError: isFeishuError(businessCode), data: {}, parsed: false, truncated: true };
   }
   if (!bodyRead.parsed) {
     return { status: response.status, code: errorCode(response.status, null), msg: "", data: {}, parsed: false };

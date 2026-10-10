@@ -125,6 +125,36 @@ describe("read_slides", () => {
     expect((response.body as { result?: { isError?: boolean } }).result?.isError).not.toBe(true);
   });
 
+  it("keeps HTML 429 as a rate limit instead of too_large", async () => {
+    const { accessToken } = await login();
+    fake.extra = (method, url) => {
+      if (method === "GET" && url.pathname === GET_PATH) {
+        return new Response("<html>429 Too Many Requests</html>", { status: 429, headers: { "content-type": "text/html" } });
+      }
+      return undefined;
+    };
+    const response = await callTool(accessToken, "read_slides", { doc: SLIDES_TOKEN, action: "get" });
+    const text = toolText(response.body);
+    expect(text).toBe("Feishu rate limit, retry shortly");
+    expect(text).not.toContain("too_large");
+    expect((response.body as { result?: { isError?: boolean } }).result?.isError).toBe(true);
+  });
+
+  it("keeps HTML 502 as a request failure instead of too_large", async () => {
+    const { accessToken } = await login();
+    fake.extra = (method, url) => {
+      if (method === "GET" && url.pathname === GET_PATH) {
+        return new Response("<html>502 Bad Gateway</html>", { status: 502, headers: { "content-type": "text/html" } });
+      }
+      return undefined;
+    };
+    const response = await callTool(accessToken, "read_slides", { doc: SLIDES_TOKEN, action: "get" });
+    const text = toolText(response.body);
+    expect(text).toBe("Feishu request failed");
+    expect(text).not.toContain("too_large");
+    expect((response.body as { result?: { isError?: boolean } }).result?.isError).toBe(true);
+  });
+
   it("names the right tool on a non-slides wiki node", async () => {
     const { accessToken } = await login();
     fake.extra = (method, url) => {

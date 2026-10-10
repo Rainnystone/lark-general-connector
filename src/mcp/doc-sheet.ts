@@ -157,7 +157,7 @@ async function readSheet(client: FeishuClient, accessToken: string, args: ReadSh
       if (range.length === 0) return { target: token, call: { kind: "done", text: "range is required", isError: true } };
       const render = args.value_render_option ?? "ToString";
       const result = await feishuOpen(client, "GET", sheetValuesUrl(token, range, render), accessToken);
-      if (result.parsed === false) {
+      if (result.truncated === true && result.status >= 200 && result.status < 300) {
         return { target: token, call: sheetValuesTooLarge() };
       }
       if (result.status === 429 || result.code !== 0 || result.rawText !== undefined) {
