@@ -8,6 +8,26 @@ const REQUEST_ORIGIN = "https://connector.example";
 const PINNED_ORIGIN = "https://pinned.example";
 
 describe("PUBLIC_URL", () => {
+  it("advertises the request origin when PUBLIC_URL is unset", async () => {
+    Reflect.deleteProperty(env, "PUBLIC_URL");
+
+    const metadata = await workerFetch("/.well-known/oauth-protected-resource/mcp", undefined, REQUEST_ORIGIN);
+    expect(metadata.status).toBe(200);
+    const body = (await metadata.json()) as { resource?: string };
+    expect(body.resource).toBe(`${REQUEST_ORIGIN}/mcp`);
+    await expectAuthorizationServer(REQUEST_ORIGIN, REQUEST_ORIGIN);
+
+    const challenge = await workerFetch("/mcp", { method: "GET", headers: { accept: "application/json, text/event-stream" } }, REQUEST_ORIGIN);
+    expect(challenge.status).toBe(401);
+    expect(challenge.headers.get("www-authenticate") ?? "").toContain(
+      `resource_metadata="${REQUEST_ORIGIN}/.well-known/oauth-protected-resource/mcp"`,
+    );
+
+    const approved = await approveLogin(undefined, undefined, { requestOrigin: REQUEST_ORIGIN });
+    expect(approved.feishu.searchParams.get("redirect_uri")).toBe(`${REQUEST_ORIGIN}/callback`);
+    expect(fake.calls).toHaveLength(0);
+  });
+
   it("advertises the request origin when PUBLIC_URL is empty", async () => {
     Object.assign(env, { PUBLIC_URL: "" });
 

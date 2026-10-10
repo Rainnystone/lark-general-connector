@@ -16,9 +16,10 @@
   },
   "vars": {
     "FEISHU_REGION": "feishu",
-    "PUBLIC_URL": "",
     "ALLOWED_REDIRECT_URIS": "https://claude.ai/api/mcp/auth_callback,https://chatgpt.com/connector_platform_oauth_redirect,https://chatgpt.com/connector/oauth/"
   },
+  // Workers Builds preview (`npx wrangler preview`) requires this key.
+  "previews": {},
   "kv_namespaces": [
     {
       "binding": "OAUTH_KV"

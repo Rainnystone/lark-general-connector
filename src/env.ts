@@ -8,6 +8,7 @@ declare global {
       COOKIE_SECRET: string;
       OWNER_OPEN_ID: string;
       FEISHU_REGION: string;
+      PUBLIC_URL?: string;
       MCP_DISABLED: string;
       TOOL_BACKENDS: string;
       P2P_DISCOVERY: string;

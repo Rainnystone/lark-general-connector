@@ -32,7 +32,7 @@ Sixteen tools:
 
 Three paths. They share one order, below. Do not follow more than one path in the same session.
 
-**Deploy to Cloudflare.** The button clones this repo into your GitHub account, provisions `OAUTH_KV` and `FEISHU_TOKENS`, prompts for `FEISHU_APP_ID`, `FEISHU_APP_SECRET`, `COOKIE_SECRET`, and `OWNER_OPEN_ID` with the descriptions in `package.json`, and lets you edit `FEISHU_REGION`. Deploy runs `wrangler deploy`. The link below is a placeholder. Replace `<owner>/<repo>` with the GitHub repo you deploy from. It contains no account id, KV id, or Worker hostname.
+**Deploy to Cloudflare.** The button clones this repo into your GitHub account, provisions `OAUTH_KV` and `FEISHU_TOKENS`, prompts for `FEISHU_APP_ID`, `FEISHU_APP_SECRET`, `COOKIE_SECRET`, and `OWNER_OPEN_ID` with the descriptions in `package.json`, and lets you edit `FEISHU_REGION`. In Advanced settings, pick "create new token". Deploy runs `wrangler deploy`. The link below is a placeholder. Replace `<owner>/<repo>` with the GitHub repo you deploy from. It contains no account id, KV id, or Worker hostname.
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/<owner>/<repo>)
 
@@ -55,7 +55,7 @@ Create the app, deploy, set the redirect, publish, connect a client, bootstrap l
 | Secret | `COOKIE_SECRET` | — | Prompted. `openssl rand -hex 32`. The wizard generates it. Signs the login cookie. |
 | Secret | `OWNER_OPEN_ID` | `pending` | Prompted. A value that is not an open_id (`ou_` plus letters and digits) is not configured. |
 | Committed var | `FEISHU_REGION` | `feishu` | `feishu` or `lark`. Any other value returns 503 on every route and sends nothing upstream. |
-| Committed var | `PUBLIC_URL` | empty | Empty uses the request's own origin. Set a full origin only to pin a custom domain. |
+| Dashboard var | `PUBLIC_URL` | unset | Optional override. Unset uses the request's own origin. Set a full origin only to pin a custom domain. |
 | Committed var | `ALLOWED_REDIRECT_URIS` | Claude and ChatGPT callbacks | Comma-separated. Append other clients. Allowed CORS hosts are these hostnames, the Worker's own host, and `localhost`. |
 | Dashboard var | `MCP_DISABLED` | unset | Kill switch. See below. `keep_vars` retains it. Not prompted. |
 | Dashboard var | `TOOL_BACKENDS` | unset | Per-tool `mcp` or `openapi`. See below. `keep_vars` retains it. Not prompted. |
@@ -146,7 +146,7 @@ Worker 同时是连接器客户端的 OAuth 授权服务器，以及 `/mcp` 上�
 
 三条路径。它们共用下面的同一顺序。同一次操作不要走多于一条路径。
 
-**Deploy to Cloudflare。** 这个按钮把本仓库克隆到你的 GitHub 账号，创建 `OAUTH_KV` 和 `FEISHU_TOKENS`，并按 `package.json` 里的说明提示填写 `FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`COOKIE_SECRET` 和 `OWNER_OPEN_ID`，同时允许你修改 `FEISHU_REGION`。部署命令是 `wrangler deploy`。下面的链接是占位符。把 `<owner>/<repo>` 换成你要部署的 GitHub 仓库。这里没有账号 id、KV id 或 Worker 主机名。
+**Deploy to Cloudflare。** 这个按钮把本仓库克隆到你的 GitHub 账号，创建 `OAUTH_KV` 和 `FEISHU_TOKENS`，并按 `package.json` 里的说明提示填写 `FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`COOKIE_SECRET` 和 `OWNER_OPEN_ID`，同时允许你修改 `FEISHU_REGION`。在 Advanced settings 里选择 "create new token"。部署命令是 `wrangler deploy`。下面的链接是占位符。把 `<owner>/<repo>` 换成你要部署的 GitHub 仓库。这里没有账号 id、KV id 或 Worker 主机名。
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/<owner>/<repo>)
 
@@ -169,7 +169,7 @@ Worker 同时是连接器客户端的 OAuth 授权服务器，以及 `/mcp` 上�
 | 密钥 | `COOKIE_SECRET` | — | 会提示。`openssl rand -hex 32`。向导会生成。用来签名登录 cookie。 |
 | 密钥 | `OWNER_OPEN_ID` | `pending` | 会提示。不是 open_id（`ou_` 加字母和数字）的值都算未配置。 |
 | 提交的变量 | `FEISHU_REGION` | `feishu` | `feishu` 或 `lark`。其他值让每个路由返回 503，且不会向上游发送任何请求。 |
-| 提交的变量 | `PUBLIC_URL` | 空 | 空则使用本次请求自己的源。只有要固定自定义域名时才填写完整源。 |
+| 控制台变量 | `PUBLIC_URL` | 未设置 | 可选覆盖。未设置则使用本次请求自己的源。只有要固定自定义域名时才填写完整源。 |
 | 提交的变量 | `ALLOWED_REDIRECT_URIS` | Claude 与 ChatGPT 回调 | 逗号分隔。其他客户端追加在后面。允许的 CORS 主机是这些主机名、Worker 自己的主机，以及 `localhost`。 |
 | 控制台变量 | `MCP_DISABLED` | 未设置 | 紧急开关。见下文。`keep_vars` 会保留它。安装时不提示。 |
 | 控制台变量 | `TOOL_BACKENDS` | 未设置 | 按工具选择 `mcp` 或 `openapi`。见下文。`keep_vars` 会保留它。安装时不提示。 |
