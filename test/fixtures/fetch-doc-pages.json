@@ -1,0 +1,60 @@
+{
+  "source": "Synthetic fetch-doc pages. emoji, negative_offset, and past_end markdown are the short edge-case bodies. second_page keeps the paging fields; its markdown is only a cut-tag stand-in. log_id values are omitted.",
+  "emoji": {
+    "args": { "offset": 38241, "limit": 1 },
+    "payload": {
+      "doc_id": "doxcnEmoji",
+      "title": "Star Harbor Guide",
+      "markdown": "🔥",
+      "offset": 38241,
+      "length": 4,
+      "total_length": 48670,
+      "has_more": true,
+      "next_offset": 38242,
+      "message": "Document fetched successfully"
+    }
+  },
+  "negative_offset": {
+    "args": { "offset": -10, "limit": 20 },
+    "sent_offset": 0,
+    "payload": {
+      "doc_id": "doxcnMinutes",
+      "title": "Notes: Sample Discussion 2000-01-01",
+      "markdown": "<quote-container>\n\n录音\n",
+      "offset": 0,
+      "length": 24,
+      "total_length": 48149,
+      "has_more": true,
+      "next_offset": 20,
+      "message": "Document fetched successfully"
+    }
+  },
+  "past_end": {
+    "args": { "offset": 50000, "limit": 100 },
+    "payload": {
+      "doc_id": "doxcnMinutes",
+      "title": "Notes: Sample Discussion 2000-01-01",
+      "markdown": "",
+      "offset": 48149,
+      "length": 0,
+      "total_length": 48149,
+      "has_more": false,
+      "next_offset": 48149,
+      "message": "Document fetched successfully"
+    }
+  },
+  "second_page": {
+    "args": { "offset": 5000, "limit": 5000 },
+    "payload": {
+      "doc_id": "doxcnMinutes",
+      "title": "Notes: Sample Discussion 2000-01-01",
+      "markdown": "<l",
+      "offset": 5000,
+      "length": 10488,
+      "total_length": 48149,
+      "has_more": true,
+      "next_offset": 10000,
+      "message": "Document fetched successfully"
+    }
+  }
+}
