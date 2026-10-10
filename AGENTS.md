@@ -2,6 +2,8 @@
 
 [中文](./AGENTS.zh-CN.md)
 
+This file is the deploy runbook. Follow it when the human asks you to deploy or set up this connector. For code changes, read `CONTEXT.md` and the tests instead: the deploy limits here (no code change, no commit, the files to leave alone) bind deployment only.
+
 Deploy this connector into the human's own Cloudflare account and their own Feishu or Lark app. Use one path: `npm run setup`, or the wrangler commands below. Do not run both in the same session. This setup does not need a code change or a commit.
 
 A later session has reached the bootstrap checkpoint when the human, on the Worker this session deployed, sees the 403 page titled `Owner not configured`. Do not stop the rest of the order there: set `OWNER_OPEN_ID`, then reconnect.
@@ -14,6 +16,16 @@ The same order for both feishu and lark. Only the hosts change. `feishu` means F
 | lark | https://open.larksuite.com/app | https://open.larksuite.com | https://accounts.larksuite.com | https://mcp.larksuite.com |
 
 Lark is supported and not live-tested. Do not edit code if Lark misbehaves.
+
+The human may not code. Every human-only step below has click-by-click instructions under the same number in the human's README ([README.md](./README.md) or [README.zh-CN.md](./README.zh-CN.md), "Setup steps"; the scopes sit under ④). Point the human to that numbered step instead of paraphrasing the console.
+
+## Get the code
+
+Work inside a copy of this repository: its `package.json` has `"name": "lark-general-connector"`. If the working directory is not one, get it. No GitHub account is needed. With git: `git clone https://github.com/Rainnystone/lark-general-connector.git`, then work in `lark-general-connector`. Without git: download `https://github.com/Rainnystone/lark-general-connector/archive/refs/heads/main.zip`, unzip it, and work in `lark-general-connector-main`.
+
+Check `node --version`. The wizard needs Node.js 22.6 or newer. If Node is older or missing, stop and ask the human to install the LTS release from https://nodejs.org.
+
+## Deploy
 
 From the repository root, run `npm ci`. Prefer `npm run setup` in a terminal the human can type into. The wizard prints 中文 and English, pauses at each human-only step, generates `COOKIE_SECRET`, and sends every secret on stdin without echoing it. If stdin is not a terminal, do not invent secret answers. Use the wrangler commands instead, and let the human type the secrets.
 
@@ -31,7 +43,7 @@ Stop. Wait for the human. If login fails, stop. Nothing is deployed.
 
 `npx wrangler deployments list --name <worker-name> --json`
 
-Exit 0 means that name already exists. An empty list on exit 0 is still an existing name. Stop. Wait for the human. Never deploy over an existing Worker name without the human's confirmation. Do not type the existing Worker name yourself. The human types that name back. Surrounding whitespace is ignored. Any other answer stops, and nothing is deployed. `[code: 10007]` means the name is absent. Continue. Any other result: stop, and do not deploy.
+Exit 0 means that name already exists. An empty list on exit 0 is still an existing name. Stop. Wait for the human. Do not type the existing Worker name yourself. The human types that name back. Surrounding whitespace is ignored. Any other answer stops, and nothing is deployed. `[code: 10007]` means the name is absent. Continue. Any other result: stop, and do not deploy.
 
 Never write secrets into files, commits or chat. Never deploy over an existing Worker name without the human's confirmation. Never widen scopes, tools or the endpoint allowlist.
 

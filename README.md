@@ -53,9 +53,13 @@ This is an open-source "connector": you deploy it into **your own** Cloudflare a
 ## What you need before you start
 
 1. **A Cloudflare account** (the free plan is enough): <https://dash.cloudflare.com/sign-up>
-2. **A GitHub account** (for the one-click deploy button): <https://github.com/signup>
-3. **A Feishu or Lark account that can create a custom app.** If you are an admin of your Feishu organization, you can create and publish it yourself. In a company tenant, publishing may need admin approval (covered below).
-4. **Claude or ChatGPT**, on a plan that lets you add custom connectors.
+2. **A Feishu or Lark account that can create a custom app.** If you are an admin of your Feishu organization, you can create and publish it yourself. In a company tenant, publishing may need admin approval (covered below).
+3. **Claude or ChatGPT**, on a plan that lets you add custom connectors.
+
+Depending on the deploy path you pick (see below), you also need:
+
+- **Path A**: a GitHub account: <https://github.com/signup>
+- **Paths B and C**: Node.js 22.6 or newer on your computer (get the LTS release at <https://nodejs.org>). No GitHub account needed.
 
 ---
 
@@ -76,11 +80,11 @@ There are three ways to deploy. **Pick one. Don't mix them.**
 
 | Path | Best for |
 | --- | --- |
-| **A. One-click deploy button** (recommended) | People who don't code. Everything happens in the browser. |
+| **A. One-click deploy button** (recommended) | People who don't code. Everything happens in the browser. Needs a GitHub account. |
 | **B. Command-line wizard** | People comfortable with a terminal. The wizard walks you through each step and generates and stores secrets for you. |
-| **C. Hand it to an AI coding agent** | People who use Claude Code, Codex, or similar. Have it follow [AGENTS.md](./AGENTS.md); it stops and waits whenever a step needs you. |
+| **C. Hand it to an AI coding agent** | People already using Claude Code, Codex, or similar. Paste one message to it; it downloads the code, deploys, and stops whenever a step needs you. |
 
-Path A is described in detail below. For path B, see [Command-line wizard](#path-b-command-line-wizard).
+Steps ①–⑧ below follow path A. For path B, see [Command-line wizard](#path-b-command-line-wizard); for path C, see [Hand it to an AI coding agent](#path-c-hand-it-to-an-ai-coding-agent). Whichever path you take, steps ①–⑧ are the reference for where to click in Feishu and in Claude or ChatGPT.
 
 ### ① Create an app in Feishu
 
@@ -161,14 +165,15 @@ Back in Claude or ChatGPT, **disconnect** the connector, then **connect it again
 
 ### Path B: command-line wizard
 
-You need Node.js and git installed. In a terminal:
+You need Node.js 22.6 or newer. First get the code onto your computer, either way:
+
+- With git: run `git clone https://github.com/Rainnystone/lark-general-connector.git` in a terminal. You get a `lark-general-connector` folder.
+- Without git: download <https://github.com/Rainnystone/lark-general-connector/archive/refs/heads/main.zip> and unzip it. You get a `lark-general-connector-main` folder.
+
+Then open a terminal in that folder and run:
 
 ```bash
-git clone https://github.com/Rainnystone/lark-general-connector.git
-```
-
-```bash
-cd lark-general-connector && npm ci && npm run setup
+npm ci && npm run setup
 ```
 
 The wizard prints every prompt in Chinese and English and follows the same ①–⑧ order as above. The differences:
@@ -178,6 +183,21 @@ The wizard prints every prompt in Chinese and English and follows the same ①�
 - It generates `COOKIE_SECRET` for you and sets `OWNER_OPEN_ID` to `pending` at first.
 - It prints the callback URL, the `/mcp` URL, and the full scope list, ready to copy.
 - If the Worker name you pick already exists in your account, it asks you to type the name again to confirm, so you don't overwrite something by accident.
+
+### Path C: hand it to an AI coding agent
+
+You need Node.js 22.6 or newer, and an AI coding agent that can run commands on your computer (for example Claude Code or Codex).
+
+Open it in an empty folder and send it this message:
+
+```
+Download https://github.com/Rainnystone/lark-general-connector into this folder, then follow AGENTS.md in the repository to deploy it into my own Cloudflare account. Stop and wait for me at every step I need to do.
+```
+
+[AGENTS.md](./AGENTS.md) is the deploy runbook written for the agent. Roughly, the split is:
+
+- **The agent**: downloads the code, logs into Cloudflare (a browser window opens for you to approve), checks the Worker name, deploys, and prints the callback URL, the scope list, and the `/mcp` URL for you.
+- **You**: the Feishu developer console (①③④), connecting in Claude or ChatGPT (⑤⑥), and **typing the secrets yourself**. You enter the App ID, App Secret, and open_id in the terminal; don't paste them into the chat. The agent tells you where to type them.
 
 ---
 

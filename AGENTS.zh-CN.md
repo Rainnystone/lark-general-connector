@@ -2,6 +2,8 @@
 
 中文 | [English](./AGENTS.md)
 
+本文件是部署手册。人类要求部署或安装这个连接器时，照本文件做。要改代码时，改读 `CONTEXT.md` 和测试：这里的部署限制（不改代码、不提交、不碰哪些文件）只约束部署。
+
 把这个连接器部署到人类自己的 Cloudflare 账号，以及他们自己的飞书或 Lark 应用。只走一条路径：`npm run setup`，或下面的 wrangler 命令。同一次操作不要两条都跑。这次安装不需要改代码，也不需要提交。
 
 后续会话到达引导检查点的标志是：人类在本会话部署的 Worker 上看到标题为 `Owner not configured` 的 403 页面。不要在那里停下后续顺序：先设置 `OWNER_OPEN_ID`，再重新连接。
@@ -14,6 +16,16 @@ feishu 和 lark 都用这一顺序。变的只有主机。`feishu` 表示飞书�
 | lark | https://open.larksuite.com/app | https://open.larksuite.com | https://accounts.larksuite.com | https://mcp.larksuite.com |
 
 Lark 可用，但没有用真实账号实测过。Lark 行为不对时，不要改代码。
+
+人类可能不会写代码。下面每个人类步骤，在人类看的 README（[README.zh-CN.md](./README.zh-CN.md) 或 [README.md](./README.md) 的「部署步骤」）里都有同编号的逐步点击说明，权限在 ④ 下面。把人类指到那个编号的步骤，不要自己转述控制台操作。
+
+## 获取代码
+
+在本仓库的一份副本里工作：它的 `package.json` 里有 `"name": "lark-general-connector"`。当前目录不是的话，先获取。不需要 GitHub 账号。有 git：`git clone https://github.com/Rainnystone/lark-general-connector.git`，然后在 `lark-general-connector` 里工作。没有 git：下载 `https://github.com/Rainnystone/lark-general-connector/archive/refs/heads/main.zip`，解压，然后在 `lark-general-connector-main` 里工作。
+
+检查 `node --version`。向导需要 Node.js 22.6 或更新版本。版本过低或没装时，停下来，请人类从 https://nodejs.org 安装 LTS 版本。
+
+## 部署
 
 在仓库根目录运行 `npm ci`。优先在人类能打字的终端里运行 `npm run setup`。向导会打印中文和 English，会在每个人类步骤停下，自己生成 `COOKIE_SECRET`，并把每个密钥从 stdin 送入且不回显。如果 stdin 不是终端，不要编造密钥。改走 wrangler 命令，让人类自己输入。
 
@@ -31,7 +43,7 @@ Wrangler 路径：
 
 `npx wrangler deployments list --name <worker-name> --json`
 
-退出码 0 表示这个名称已经存在。退出码 0 时输出是空列表，也算已存在。停下来。等人类完成。未经人类确认，不要覆盖已存在的 Worker 名称。不要自己输入已存在的 Worker 名称。人类自己把这个名称再输入一遍。名称前后的空白不算。其他回答都停止，且不会部署。输出里有 `[code: 10007]` 表示名称不存在，可以继续。其他结果都停止，不要部署。
+退出码 0 表示这个名称已经存在。退出码 0 时输出是空列表，也算已存在。停下来。等人类完成。不要自己输入已存在的 Worker 名称。人类自己把这个名称再输入一遍。名称前后的空白不算。其他回答都停止，且不会部署。输出里有 `[code: 10007]` 表示名称不存在，可以继续。其他结果都停止，不要部署。
 
 不要把密钥写入文件、提交或对话。未经人类确认，不要覆盖已存在的 Worker 名称。不要放宽权限、工具或端点允许列表。
 
