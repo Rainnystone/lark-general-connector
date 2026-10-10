@@ -5,6 +5,7 @@ import { feishuOpen, parseDocRef, resolveDoc, resolvesWikiNode, stringField, typ
 import type { FeishuCall } from "../feishu/mcp-proxy";
 import { asRecord } from "../feishu/payload";
 import { fromOpen, runTool } from "./proxied-call";
+import { OUTPUT_LIMIT } from "./tools";
 
 export const SHEET_ACTIONS = ["meta", "values"] as const;
 export const WRITE_SHEET_ACTIONS = ["create", "put", "append", "batch_update"] as const;
@@ -55,6 +56,14 @@ const WRITE_TOOL: Record<string, string> = {
   file: "write_file",
   mindnote: "read_mindnote",
 };
+
+function sheetValuesTooLarge(): FeishuCall {
+  return {
+    kind: "done",
+    text: JSON.stringify({ too_large: true, hint: "request a smaller range" }),
+    isError: false,
+  };
+}
 
 function typeMismatch(objType: string, tools: Record<string, string>): FeishuCall {
   const label = objType.length > 0 ? objType : "unknown";
@@ -148,7 +157,17 @@ async function readSheet(client: FeishuClient, accessToken: string, args: ReadSh
       if (range.length === 0) return { target: token, call: { kind: "done", text: "range is required", isError: true } };
       const render = args.value_render_option ?? "ToString";
       const result = await feishuOpen(client, "GET", sheetValuesUrl(token, range, render), accessToken);
-      return { target: token, call: fromOpen(result, JSON.stringify(result.data)) };
+      if (result.parsed === false) {
+        return { target: token, call: sheetValuesTooLarge() };
+      }
+      if (result.status === 429 || result.code !== 0 || result.rawText !== undefined) {
+        return { target: token, call: fromOpen(result, "") };
+      }
+      const text = JSON.stringify(result.data);
+      if (text.length > OUTPUT_LIMIT) {
+        return { target: token, call: sheetValuesTooLarge() };
+      }
+      return { target: token, call: fromOpen(result, text) };
     }
     default: {
       const unexpected: never = args.action;

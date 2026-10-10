@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { isEndpointAllowed } from "../src/feishu/client";
 import sheetsQuery from "./fixtures/doc-types/sheet-v3-sheets-query.json" with { type: "json" };
 import sheetValues from "./fixtures/doc-types/sheet-v2-values-get.json" with { type: "json" };
+import { OUTPUT_LIMIT } from "../src/mcp/tools";
 import { callTool, listTools, logLines, login, toolText, useFakeFeishu } from "./support";
 
 const fake = useFakeFeishu();
@@ -90,6 +91,27 @@ describe("read_sheet", () => {
     const response = await callTool(accessToken, "read_sheet", { doc: SHEET_TOKEN, action: "values", range: RANGE });
     expect(fake.calls.slice(before).map((call) => call.url)).toContain(VALUES_URL);
     expect(JSON.parse(toolText(response.body))).toEqual(sheetValues.data);
+  });
+
+  it("returns too_large instead of truncated JSON when values exceed the tool output cap", async () => {
+    const { accessToken } = await login();
+    fake.extra = (method, url) => {
+      if (method === "GET" && url.pathname === `/open-apis/sheets/v2/spreadsheets/${SHEET_TOKEN}/values/${ENCODED_RANGE}`) {
+        return Response.json({
+          code: 0,
+          data: { valueRange: { range: RANGE, values: [["x".repeat(OUTPUT_LIMIT + 1)]] } },
+        });
+      }
+      return undefined;
+    };
+    const response = await callTool(accessToken, "read_sheet", { doc: SHEET_TOKEN, action: "values", range: RANGE });
+    const text = toolText(response.body);
+    expect(text.length).toBeLessThanOrEqual(OUTPUT_LIMIT);
+    expect(text).not.toContain("[truncated; ask for the next page]");
+    const parsed = JSON.parse(text) as Record<string, unknown>;
+    expect(parsed.too_large).toBe(true);
+    expect(String(parsed.hint)).toMatch(/smaller range/i);
+    expect((response.body as { result?: { isError?: boolean } }).result?.isError).not.toBe(true);
   });
 
   it("names the right tool on a non-sheet wiki node", async () => {
