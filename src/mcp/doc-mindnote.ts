@@ -47,7 +47,7 @@ function mindnotePathToken(doc: string): string | null {
     const url = new URL(doc.trim());
     if (url.protocol !== "http:" && url.protocol !== "https:") return null;
     const parts = url.pathname.split("/").filter((part) => part.length > 0);
-    const at = parts.indexOf("mindnotes");
+    const at = parts.findIndex((part) => part === "mindnotes" || part === "mindnote");
     const raw = parts[at + 1];
     if (at < 0 || !raw) return null;
     return decodeURIComponent(raw);

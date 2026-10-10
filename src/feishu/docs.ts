@@ -90,6 +90,7 @@ const URL_OBJ_TYPE = [
   ["slides", "slides"],
   ["file", "file"],
   ["mindnotes", "mindnote"],
+  ["mindnote", "mindnote"],
 ] as const;
 
 export function parseDocRef(doc: string): DocRef {

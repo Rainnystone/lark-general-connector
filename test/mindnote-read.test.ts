@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 import { isEndpointAllowed } from "../src/feishu/client";
+import { parseDocRef } from "../src/feishu/docs";
 import mindnoteNodes from "./fixtures/doc-types/mindnote-nodes-list.json" with { type: "json" };
 import { callTool, listTools, logLines, login, toolText, useFakeFeishu } from "./support";
 
@@ -28,6 +29,34 @@ describe("read_mindnote", () => {
     expect(isEndpointAllowed("GET", `${NODES_URL}/extra`)).toBe(false);
     expect(isEndpointAllowed("GET", `https://open.feishu.cn/open-apis/mindnote/v1/mindnotes/${MIND_TOKEN}`)).toBe(false);
     expect(isEndpointAllowed("GET", `https://open.larksuite.com${NODES_PATH}`)).toBe(false);
+  });
+
+  it("accepts singular /mindnote/ and plural /mindnotes/ in the lookup and shared parser", async () => {
+    expect(parseDocRef(`https://example.feishu.cn/mindnote/${MIND_TOKEN}`)).toEqual({
+      kind: "token",
+      token: MIND_TOKEN,
+      objType: "mindnote",
+    });
+    expect(parseDocRef(`https://example.feishu.cn/mindnotes/${MIND_TOKEN}`)).toEqual({
+      kind: "token",
+      token: MIND_TOKEN,
+      objType: "mindnote",
+    });
+    const { accessToken } = await login();
+    fake.extra = (method, url) => {
+      if (method === "GET" && url.pathname === NODES_PATH) {
+        return Response.json({ code: 0, data: mindnoteNodes.data });
+      }
+      return undefined;
+    };
+    const before = fake.calls.length;
+    const response = await callTool(accessToken, "read_mindnote", {
+      doc: `https://example.feishu.cn/mindnote/${MIND_TOKEN}`,
+      action: "nodes",
+    });
+    expect(JSON.parse(toolText(response.body))).toEqual(mindnoteNodes.data);
+    expect(fake.calls.slice(before).some((call) => call.url.includes("/wiki/v2/spaces/get_node"))).toBe(false);
+    expect(fake.calls.slice(before).map((call) => call.url)).toContain(NODES_URL);
   });
 
   it("resolves a wiki URL, a mindnotes URL, and a token, and returns fixture nodes", async () => {
