@@ -32,7 +32,7 @@ Sixteen tools:
 
 Three paths. They share one order, below. Do not follow more than one path in the same session.
 
-**Deploy to Cloudflare.** The button clones this repo into your GitHub account, provisions `OAUTH_KV` and `FEISHU_TOKENS`, prompts for `FEISHU_APP_ID`, `FEISHU_APP_SECRET`, `COOKIE_SECRET`, and `OWNER_OPEN_ID` with the descriptions in `package.json`, and lets you edit `FEISHU_REGION`. Deploy runs `wrangler deploy`. The button points at this GitHub repo. It contains no account id, KV id, or Worker hostname.
+**Deploy to Cloudflare.** The button clones this repo into your GitHub account, provisions `OAUTH_KV` and `FEISHU_TOKENS`, prompts for `FEISHU_APP_ID`, `FEISHU_APP_SECRET`, `COOKIE_SECRET`, and `OWNER_OPEN_ID` with the descriptions in `package.json`, and lets you edit `FEISHU_REGION`. In Advanced settings, pick "create new token" and turn off "Enable preview builds". Deploy runs `wrangler deploy`. The button points at this GitHub repo. It contains no account id, KV id, or Worker hostname.
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Rainnystone/lark-general-connector)
 
@@ -55,7 +55,7 @@ Create the app, deploy, set the redirect, publish, connect a client, bootstrap l
 | Secret | `COOKIE_SECRET` | — | Prompted. `openssl rand -hex 32`. The wizard generates it. Signs the login cookie. |
 | Secret | `OWNER_OPEN_ID` | `pending` | Prompted. A value that is not an open_id (`ou_` plus letters and digits) is not configured. |
 | Committed var | `FEISHU_REGION` | `feishu` | `feishu` means Feishu. `lark` means Lark. Any other value returns 503 on every route and sends nothing upstream. |
-| Committed var | `PUBLIC_URL` | empty | Empty uses the request's own origin. Set a full origin only to pin a custom domain. |
+| Dashboard var | `PUBLIC_URL` | unset | Optional override. Unset uses the request's own origin. Set a full origin only to pin a custom domain. |
 | Committed var | `ALLOWED_REDIRECT_URIS` | Claude and ChatGPT callbacks | Comma-separated. Append other clients. Allowed CORS hosts are these hostnames, the Worker's own host, and `localhost`. |
 | Dashboard var | `MCP_DISABLED` | unset | Kill switch. See below. `keep_vars` retains it. Not prompted. |
 | Dashboard var | `TOOL_BACKENDS` | unset | Per-tool `mcp` or `openapi`. See below. `keep_vars` retains it. Not prompted. |

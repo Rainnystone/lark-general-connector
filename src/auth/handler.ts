@@ -15,7 +15,8 @@ import { openStateCookie, readCookie, sealStateCookie, stateCookieHeader, stateC
 export { configuredOwner };
 
 export function publicOrigin(env: Env, request: Request): string {
-  const configured = env.PUBLIC_URL.trim();
+  const raw = env.PUBLIC_URL;
+  const configured = typeof raw === "string" ? raw.trim() : "";
   if (configured.length === 0) return new URL(request.url).origin;
   return new URL(configured).origin;
 }

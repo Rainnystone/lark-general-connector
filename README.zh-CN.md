@@ -32,7 +32,7 @@ Worker 同时是连接器客户端的 OAuth 授权服务器，以及 `/mcp` 上�
 
 三条路径。它们共用下面的同一顺序。同一次操作不要走多于一条路径。
 
-**Deploy to Cloudflare。** 这个按钮把本仓库克隆到你的 GitHub 账号，创建 `OAUTH_KV` 和 `FEISHU_TOKENS`，并按 `package.json` 里的说明提示填写 `FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`COOKIE_SECRET` 和 `OWNER_OPEN_ID`，同时允许你修改 `FEISHU_REGION`。部署命令是 `wrangler deploy`。按钮指向本 GitHub 仓库。这里没有账号 id、KV id 或 Worker 主机名。
+**Deploy to Cloudflare。** 这个按钮把本仓库克隆到你的 GitHub 账号，创建 `OAUTH_KV` 和 `FEISHU_TOKENS`，并按 `package.json` 里的说明提示填写 `FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`COOKIE_SECRET` 和 `OWNER_OPEN_ID`，同时允许你修改 `FEISHU_REGION`。在 Advanced settings 里选择 "create new token"，并关闭 "Enable preview builds"。部署命令是 `wrangler deploy`。按钮指向本 GitHub 仓库。这里没有账号 id、KV id 或 Worker 主机名。
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Rainnystone/lark-general-connector)
 
@@ -55,7 +55,7 @@ Worker 同时是连接器客户端的 OAuth 授权服务器，以及 `/mcp` 上�
 | 密钥 | `COOKIE_SECRET` | — | 会提示。`openssl rand -hex 32`。向导会生成。用来签名登录 cookie。 |
 | 密钥 | `OWNER_OPEN_ID` | `pending` | 会提示。不是 open_id（`ou_` 加字母和数字）的值都算未配置。 |
 | 提交的变量 | `FEISHU_REGION` | `feishu` | `feishu` 表示飞书。`lark` 表示 Lark。其他值让每个路由返回 503，且不会向上游发送任何请求。 |
-| 提交的变量 | `PUBLIC_URL` | 空 | 空则使用本次请求自己的源。只有要固定自定义域名时才填写完整源。 |
+| 控制台变量 | `PUBLIC_URL` | 未设置 | 可选覆盖。未设置则使用本次请求自己的源。只有要固定自定义域名时才填写完整源。 |
 | 提交的变量 | `ALLOWED_REDIRECT_URIS` | Claude 与 ChatGPT 回调 | 逗号分隔。其他客户端追加在后面。允许的 CORS 主机是这些主机名、Worker 自己的主机，以及 `localhost`。 |
 | 控制台变量 | `MCP_DISABLED` | 未设置 | 紧急开关。见下文。`keep_vars` 会保留它。安装时不提示。 |
 | 控制台变量 | `TOOL_BACKENDS` | 未设置 | 按工具选择 `mcp` 或 `openapi`。见下文。`keep_vars` 会保留它。安装时不提示。 |
