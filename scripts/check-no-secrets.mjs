@@ -76,17 +76,6 @@ function readText(path) {
   }
 }
 
-function section(text, heading) {
-  const start = text.indexOf(`\n${heading}\n`);
-  const atStart = text.startsWith(`${heading}\n`);
-  const from = atStart ? 0 : start;
-  if (from === -1) return null;
-  const bodyStart = from + (atStart ? heading.length + 1 : heading.length + 2);
-  const rest = text.slice(bodyStart);
-  const next = rest.search(/\n## /);
-  return next === -1 ? rest : rest.slice(0, next);
-}
-
 function hasName(text, name) {
   return new RegExp(`\\b${name}\\b`).test(text);
 }
@@ -155,13 +144,15 @@ function readmeConfigNames(text) {
 
 export function scanReadmeConfig(root) {
   const normalized = root.replace(/[\\/]+$/, "");
-  const readme = readText(join(normalized, "README.md"));
-  if (readme === null) return ["README.md is missing"];
+  const english = readText(join(normalized, "README.md"));
+  const chinese = readText(join(normalized, "README.zh-CN.md"));
   const failures = [];
-  const english = section(readme, "## English");
-  const chinese = section(readme, "## 中文");
-  if (english === null) failures.push("README.md is missing the English section");
-  if (chinese === null) failures.push("README.md is missing the 中文 section");
+  if (english === null) failures.push("README.md is missing");
+  if (chinese === null) failures.push("README.zh-CN.md is missing");
+  const files = [
+    ["README.md", english],
+    ["README.zh-CN.md", chinese],
+  ];
   const wrangler = readText(join(normalized, "wrangler.jsonc"));
   const devVars = readText(join(normalized, ".dev.vars.example"));
   const env = readText(join(normalized, "src", "env.ts"));
@@ -185,17 +176,19 @@ export function scanReadmeConfig(root) {
     }
     if (parsed !== null) for (const name of packageBindingNames(parsed)) codeNames.add(name);
   }
-  for (const name of readmeConfigNames(readme)) {
-    if (!codeNames.has(name)) {
-      failures.push(`README.md names ${name}, which is not a var, secret, or binding in the code`);
+  for (const [label, text] of files) {
+    if (text === null) continue;
+    for (const name of readmeConfigNames(text)) {
+      if (!codeNames.has(name)) {
+        failures.push(`${label} names ${name}, which is not a var, secret, or binding in the code`);
+      }
     }
   }
   for (const name of [...codeNames].sort()) {
-    if (english !== null && !hasName(english, name)) {
-      failures.push(`README.md English section does not document ${name}`);
-    }
-    if (chinese !== null && !hasName(chinese, name)) {
-      failures.push(`README.md 中文 section does not document ${name}`);
+    for (const [label, text] of files) {
+      if (text !== null && !hasName(text, name)) {
+        failures.push(`${label} does not document ${name}`);
+      }
     }
   }
   return failures;
