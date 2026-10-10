@@ -17,7 +17,7 @@ test(".dev.vars.example lists only the four deploy secrets", () => {
   assert.deepEqual(lines, ["FEISHU_APP_ID=", "FEISHU_APP_SECRET=", "COOKIE_SECRET=", "OWNER_OPEN_ID=pending"]);
 });
 
-test("package.json prompts for the deploy bindings in Chinese and English", () => {
+test("package.json prompts for the deploy bindings in 中文 and English", () => {
   const pkg = JSON.parse(read("package.json"));
   assert.equal(pkg.scripts.deploy, "wrangler deploy");
   const bindings = pkg.cloudflare.bindings;

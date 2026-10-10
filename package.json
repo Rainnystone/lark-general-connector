@@ -38,7 +38,7 @@
         "description": "先填 pending。第一次登录会被拒绝，页面只显示你自己的 open_id；把那个值填到这里之后才能连接。 Start with pending. The first login is denied and the page shows only your open_id; paste that value here before anyone can connect."
       },
       "FEISHU_REGION": {
-        "description": "feishu（飞书中国，默认）或 lark（Lark 国际）。其他值会拒绝全部请求。 feishu (Feishu China, the default) or lark (Lark international). Any other value rejects every request."
+        "description": "feishu（飞书，默认）或 lark（Lark）。其他值会拒绝全部请求。 feishu (Feishu, the default) or lark (Lark). Any other value rejects every request."
       },
       "PUBLIC_URL": {
         "description": "留空则使用本次请求自己的源。要固定自定义域名时再填写完整源，例如 https://connector.example。 Leave empty to use the request's own origin. Set a full origin only to pin a custom domain, for example https://connector.example."
