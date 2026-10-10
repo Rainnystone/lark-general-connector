@@ -87,6 +87,36 @@ describe("delete doc to recycle bin", () => {
     expect((response.body as { result?: { isError?: boolean } }).result?.isError).toBe(true);
   });
 
+  it("refuses a missing or blank live title even when confirm_title is blank", async () => {
+    const { accessToken } = await login();
+    const documents = [
+      undefined,
+      { document_id: "doxcn1" },
+      { document_id: "doxcn1", title: "" },
+      { document_id: "doxcn1", title: "   " },
+      { document_id: "doxcn1", title: null },
+    ];
+    for (const document of documents) {
+      for (const confirm_title of ["", "   "]) {
+        fake.extra = (method, url) => {
+          if (method === "GET" && url.pathname === "/open-apis/wiki/v2/spaces/get_node") {
+            return Response.json({ code: 131005, msg: "document is not in wiki" });
+          }
+          if (method === "GET" && url.pathname === "/open-apis/docx/v1/documents/doxcn1") {
+            const data = document === undefined ? {} : { document };
+            return Response.json({ code: 0, data });
+          }
+          return undefined;
+        };
+        const before = fake.calls.length;
+        const response = await callTool(accessToken, "delete_doc", { doc: "doxcn1", confirm_title });
+        expect(fake.calls.slice(before).some((call) => call.method === "DELETE")).toBe(false);
+        expect((response.body as { result?: { isError?: boolean } }).result?.isError).toBe(true);
+        expect(toolText(response.body)).toBe("Title does not match. Delete refused.");
+      }
+    }
+  });
+
   it("accepts a title that differs only by surrounding spaces or NFC form", async () => {
     const { accessToken } = await login();
     let deleted = 0;

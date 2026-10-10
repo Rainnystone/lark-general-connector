@@ -136,12 +136,12 @@ async function deleteCloudDoc(client: FeishuClient, accessToken: string, token: 
   const loaded = await feishuOpen(client, "GET", documentUrl(token), accessToken);
   const loadedBlock = transportBlock(loaded);
   if (loadedBlock) return loadedBlock;
-  const title = liveTitle(loaded.data);
+  const title = confirmedTitle(liveTitle(loaded.data));
   if (loaded.parsed !== true || loaded.code !== 0) {
     const code = loaded.parsed === true ? loaded.code : loaded.status;
     return { kind: "done", text: "Document not found or no access.", isError: true, code: String(code) };
   }
-  if (confirmedTitle(title) !== confirmedTitle(confirmTitle)) {
+  if (title.length === 0 || title !== confirmedTitle(confirmTitle)) {
     return { kind: "done", text: "Title does not match. Delete refused.", isError: true, code: "title_mismatch" };
   }
   const deleted = await feishuOpen(client, "DELETE", deleteUrl(token), accessToken);
