@@ -28,7 +28,25 @@ export function isRedirectAllowed(uri: string, allowlist: string): boolean {
     .split(",")
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0);
-  return entries.some((entry) => (entry.endsWith("/") ? uri.startsWith(entry) : uri === entry));
+  return entries.some((entry) => {
+    if (entry.endsWith("*")) return matchesWildcard(parsed, uri, entry.slice(0, -1));
+    return entry.endsWith("/") ? uri.startsWith(entry) : uri === entry;
+  });
+}
+
+// An entry ending in "*" matches a URI with the same scheme and host whose path is the
+// entry's path followed only by [A-Za-z0-9_.-] characters, with no query or fragment.
+function matchesWildcard(parsed: URL, uri: string, prefix: string): boolean {
+  let base: URL;
+  try {
+    base = new URL(prefix);
+  } catch {
+    return false;
+  }
+  if (uri !== parsed.href || parsed.search !== "" || parsed.hash !== "") return false;
+  if (parsed.protocol !== base.protocol || parsed.host !== base.host) return false;
+  if (!parsed.pathname.startsWith(base.pathname)) return false;
+  return /^[A-Za-z0-9_.-]+$/.test(parsed.pathname.slice(base.pathname.length));
 }
 
 export function registrationDecision(
