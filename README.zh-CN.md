@@ -233,7 +233,7 @@ open_id: ou_xxxxxxxxxxxxxxxx
 
 **ChatGPT**：打开 **Settings → Apps → Advanced settings**，开启 **Developer mode（开发者模式）**，然后进入 **Apps → Create**。URL 填 `你的连接器地址/mcp`，认证方式选 **OAuth**，点击 **Scan Tools**，再点 **Create**。部分账号显示的是 **Plugins → + → Add custom MCP server**。可用套餐和菜单名称会变化，请以你看到的界面为准。
 
-其他支持 OAuth 远程 MCP 的客户端理论上也能用，但需要先把它的回调地址加进 `ALLOWED_REDIRECT_URIS`（见[技术参考](#配置项)）。目前实测过的只有 Claude 和 ChatGPT。
+其他支持 OAuth 远程 MCP 的客户端理论上也能用，但需要先把它的回调地址加进 `ALLOWED_REDIRECT_URIS`（见[技术参考](#配置项)）。Gemini 自定义连接器默认已放行（回调前缀 `https://oauth-redirect.googleusercontent.com/r/`）。目前完整实测过的只有 Claude 和 ChatGPT。
 
 ---
 
@@ -306,14 +306,14 @@ Worker 同时是连接器客户端的 OAuth 授权服务器，以及 `/mcp` 上�
 | 密钥 | `OWNER_OPEN_ID` | `pending` | 部署时填写。不是 open_id（`ou_` 加字母和数字）的值都算未配置。 |
 | 提交的变量 | `FEISHU_REGION` | `feishu` | `feishu` 表示飞书。`lark` 表示 Lark。其他值让每个路由返回 503，且不会向上游发送任何请求。 |
 | 控制台变量 | `PUBLIC_URL` | 未设置 | 可选覆盖。未设置则使用本次请求自己的源。只有要固定自定义域名时才填写完整源。 |
-| 提交的变量 | `ALLOWED_REDIRECT_URIS` | Claude 与 ChatGPT 回调 | 逗号分隔。其他客户端追加在后面。允许的 CORS 主机是这些主机名、Worker 自己的主机，以及 `localhost`。 |
+| 提交的变量 | `ALLOWED_REDIRECT_URIS` | Claude、ChatGPT 与 Gemini 回调 | 逗号分隔。其他客户端追加在后面。允许的 CORS 主机是这些主机名、Worker 自己的主机，以及 `localhost`。 |
 | 控制台变量 | `MCP_DISABLED` | 未设置 | 紧急开关。见下文。`keep_vars` 会保留它。安装时不提示。 |
 | 控制台变量 | `TOOL_BACKENDS` | 未设置 | 按工具选择 `mcp` 或 `openapi`。见下文。`keep_vars` 会保留它。安装时不提示。 |
 | 控制台变量 | `P2P_DISCOVERY` | 未设置 | `auto`、`types_param` 或 `search`。见下文。`keep_vars` 会保留它。安装时不提示。 |
 | 绑定 | `OAUTH_KV` | 自动创建 | KV 命名空间。配置里没有 id。 |
 | 绑定 | `FEISHU_TOKENS` | Durable Object `FeishuTokenStore`，迁移 `v1` | 所有者令牌存储。 |
 
-`ALLOWED_REDIRECT_URIS` 提交进仓库的默认值是 `https://claude.ai/api/mcp/auth_callback,https://chatgpt.com/connector_platform_oauth_redirect,https://chatgpt.com/connector/oauth/`。
+`ALLOWED_REDIRECT_URIS` 提交进仓库的默认值是 `https://claude.ai/api/mcp/auth_callback,https://chatgpt.com/connector_platform_oauth_redirect,https://chatgpt.com/connector/oauth/,https://oauth-redirect.googleusercontent.com/r/`。
 
 控制台变量不写在 `wrangler.jsonc` 里。与密钥同名的提交变量会破坏部署，所以这四个密钥也不是提交变量。
 
