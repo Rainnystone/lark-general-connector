@@ -233,7 +233,7 @@ Back in Claude or ChatGPT, **disconnect** the connector, then **connect it again
 
 **ChatGPT**: open **Settings → Apps → Advanced settings** and turn on **Developer mode**, then go to **Apps → Create**. Enter the URL `your connector URL/mcp`, choose **OAuth**, click **Scan Tools**, then **Create**. Some accounts show **Plugins → + → Add custom MCP server** instead. Plan availability and labels change over time, so check what your ChatGPT UI shows.
 
-Other clients that support OAuth remote MCP should also work, but first add their callback URL to `ALLOWED_REDIRECT_URIS` (see [Configuration](#configuration)). Only Claude and ChatGPT have been tested.
+Other clients that support OAuth remote MCP should also work, but first add their callback URL to `ALLOWED_REDIRECT_URIS` (see [Configuration](#configuration)). Gemini custom connectors are allowed by default (redirect prefix `https://oauth-redirect.googleusercontent.com/r/user_bound_custom-mcp-*`). Only Claude and ChatGPT have been tested end to end.
 
 ---
 
@@ -306,14 +306,14 @@ Twenty-five tools:
 | Secret | `OWNER_OPEN_ID` | `pending` | Prompted. A value that is not an open_id (`ou_` plus letters and digits) is not configured. |
 | Committed var | `FEISHU_REGION` | `feishu` | `feishu` means Feishu. `lark` means Lark. Any other value returns 503 on every route and sends nothing upstream. |
 | Dashboard var | `PUBLIC_URL` | unset | Optional override. Unset uses the request's own origin. Set a full origin only to pin a custom domain. |
-| Committed var | `ALLOWED_REDIRECT_URIS` | Claude and ChatGPT callbacks | Comma-separated. Append other clients. Allowed CORS hosts are these hostnames, the Worker's own host, and `localhost`. |
+| Committed var | `ALLOWED_REDIRECT_URIS` | Claude, ChatGPT, and Gemini callbacks | Comma-separated. Append other clients. Entries match exactly; an entry ending in `/` matches any URI under that path; an entry ending in `*` matches same scheme and host, path starting with the text before `*`, followed only by letters, digits, `_`, `.`, `-`, with no query or fragment. Allowed CORS hosts are these hostnames, the Worker's own host, and `localhost`. |
 | Dashboard var | `MCP_DISABLED` | unset | Kill switch. See below. `keep_vars` retains it. Not prompted. |
 | Dashboard var | `TOOL_BACKENDS` | unset | Per-tool `mcp` or `openapi`. See below. `keep_vars` retains it. Not prompted. |
 | Dashboard var | `P2P_DISCOVERY` | unset | `auto`, `types_param`, or `search`. See below. `keep_vars` retains it. Not prompted. |
 | Binding | `OAUTH_KV` | auto-provisioned | KV namespace. No id in config. |
 | Binding | `FEISHU_TOKENS` | Durable Object `FeishuTokenStore`, migration `v1` | Owner token store. |
 
-The committed default of `ALLOWED_REDIRECT_URIS` is `https://claude.ai/api/mcp/auth_callback,https://chatgpt.com/connector_platform_oauth_redirect,https://chatgpt.com/connector/oauth/`.
+The committed default of `ALLOWED_REDIRECT_URIS` is `https://claude.ai/api/mcp/auth_callback,https://chatgpt.com/connector_platform_oauth_redirect,https://chatgpt.com/connector/oauth/,https://oauth-redirect.googleusercontent.com/r/user_bound_custom-mcp-*`.
 
 Dashboard vars are not in `wrangler.jsonc`. A committed var with the same name as a secret would break deploy, so the four secrets are not committed vars either.
 

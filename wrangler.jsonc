@@ -16,7 +16,7 @@
   },
   "vars": {
     "FEISHU_REGION": "feishu",
-    "ALLOWED_REDIRECT_URIS": "https://claude.ai/api/mcp/auth_callback,https://chatgpt.com/connector_platform_oauth_redirect,https://chatgpt.com/connector/oauth/"
+    "ALLOWED_REDIRECT_URIS": "https://claude.ai/api/mcp/auth_callback,https://chatgpt.com/connector_platform_oauth_redirect,https://chatgpt.com/connector/oauth/,https://oauth-redirect.googleusercontent.com/r/user_bound_custom-mcp-*"
   },
   "kv_namespaces": [
     {

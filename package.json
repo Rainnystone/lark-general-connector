@@ -44,7 +44,7 @@
         "description": "留空则使用本次请求自己的源。要固定自定义域名时再填写完整源，例如 https://connector.example。 Leave empty to use the request's own origin. Set a full origin only to pin a custom domain, for example https://connector.example."
       },
       "ALLOWED_REDIRECT_URIS": {
-        "description": "允许的 OAuth 回调地址，逗号分隔。默认包含 Claude 和 ChatGPT，其他客户端把回调追加在后面。 Comma-separated allowed OAuth redirect URIs. The default includes Claude and ChatGPT; append other clients."
+        "description": "允许的 OAuth 回调地址，逗号分隔。默认包含 Claude、ChatGPT 和 Gemini，其他客户端把回调追加在后面。 Comma-separated allowed OAuth redirect URIs. The default includes Claude, ChatGPT, and Gemini; append other clients."
       }
     }
   }
