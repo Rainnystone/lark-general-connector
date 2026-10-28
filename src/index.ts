@@ -1,6 +1,7 @@
 import { createMcpHandler } from "agents/mcp/server";
 import { OAuthProvider } from "@cloudflare/workers-oauth-provider";
 import { audit } from "./audit";
+import { revokeOwnerGrants } from "./auth/grants";
 import { configuredOwner, handleAuth, publicOrigin } from "./auth/handler";
 import { disabledPage } from "./auth/pages";
 import type { Env } from "./env";
@@ -67,7 +68,10 @@ function getProvider(env: Env, publicUrl: string): OAuthProvider<Env> {
         const owner = configuredOwner(handlerEnv.OWNER_OPEN_ID);
         if (!openId || owner === null || openId !== owner) return invalidToken(publicUrl);
         const status = await handlerEnv.FEISHU_TOKENS.getByName(openId).status();
-        if (!status.stored || status.reauthRequired) return invalidToken(publicUrl);
+        if (!status.stored || status.reauthRequired) {
+          await revokeOwnerGrants(handlerEnv, openId);
+          return invalidToken(publicUrl);
+        }
         return requestContext.run({ env: handlerEnv, openId }, () => mcp(request, handlerEnv, ctx));
       },
     },

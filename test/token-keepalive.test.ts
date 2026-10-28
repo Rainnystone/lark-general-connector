@@ -1,8 +1,9 @@
 import { runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import { describe, expect, it, vi } from "vitest";
+import { grantUserId } from "../src/auth/grants";
 import { FeishuTokenStore } from "../src/tokens/store";
-import { callTool, logLines, login, toolText, useFakeFeishu } from "./support";
+import { callTool, logLines, login, postMcp, toolText, useFakeFeishu } from "./support";
 
 const fake = useFakeFeishu();
 
@@ -240,5 +241,51 @@ describe("token keepalive alarm", () => {
     expect(await runDurableObjectAlarm(tokens("ou_invalid"))).toBe(true);
     expect(fake.calls).toHaveLength(before);
     expect(await alarmAt("ou_invalid")).toBeNull();
+  });
+
+  it("status() restores a keepalive alarm after a skipped disable or invalid-region fire on the same instance", async () => {
+    await put({ name: "ou_restore", refreshExpiresIn: THIRTY_DAYS_S });
+    expect((await tokens("ou_restore").status()).stored).toBe(true);
+    expect(await alarmAt("ou_restore")).not.toBeNull();
+
+    env.MCP_DISABLED = "1";
+    const beforeDisabled = fake.calls.length;
+    expect(await runDurableObjectAlarm(tokens("ou_restore"))).toBe(true);
+    expect(await alarmAt("ou_restore")).toBeNull();
+    expect(fake.calls).toHaveLength(beforeDisabled);
+    env.MCP_DISABLED = "0";
+    expect((await tokens("ou_restore").status()).stored).toBe(true);
+    expect(await alarmAt("ou_restore")).not.toBeNull();
+
+    env.FEISHU_REGION = "intl";
+    const beforeInvalid = fake.calls.length;
+    expect(await runDurableObjectAlarm(tokens("ou_restore"))).toBe(true);
+    expect(await alarmAt("ou_restore")).toBeNull();
+    expect(fake.calls).toHaveLength(beforeInvalid);
+    env.FEISHU_REGION = "feishu";
+    expect((await tokens("ou_restore").status()).stored).toBe(true);
+    expect(await alarmAt("ou_restore")).not.toBeNull();
+  });
+
+  it("alarm terminal reauth logs reauth_required and /mcp revokes owner grants", async () => {
+    const { accessToken } = await login();
+    const helpers = env.OAUTH_PROVIDER;
+    expect(helpers).toBeTruthy();
+    expect((await helpers!.listUserGrants(grantUserId("ou_owner"))).items.length).toBeGreaterThan(0);
+
+    fake.refreshError = { body: { code: 20026 } };
+    await put({ refreshExpiresIn: THIRTY_DAYS_S });
+    const logs = logLines();
+    expect(await runDurableObjectAlarm(tokens())).toBe(true);
+    const terminal = await tokens().status();
+    expect(terminal.stored).toBe(false);
+    expect(terminal.reauthRequired).toBe(true);
+    expect(logs.lines().some((line) => line.includes('"event":"reauth_required"') && line.includes('"code":"20026"'))).toBe(true);
+    expect((await helpers!.listUserGrants(grantUserId("ou_owner"))).items.length).toBeGreaterThan(0);
+
+    const response = await postMcp(accessToken, { jsonrpc: "2.0", id: 4, method: "tools/list" });
+    expect(response.status).toBe(401);
+    expect((await helpers!.listUserGrants(grantUserId("ou_owner"))).items).toHaveLength(0);
+    logs.restore();
   });
 });

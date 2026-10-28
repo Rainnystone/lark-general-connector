@@ -58,7 +58,7 @@ function rowFrom(record: Record<string, unknown>): TokenRow | null {
   const scope = stringValue(record.scope);
   const authorizedAt = numberValue(record.authorized_at);
   const reauth = numberValue(record.reauth_required);
-  if (!access || !refresh || accessExpires === null || refreshExpires === null || scope === null || authorizedAt === null || reauth === null) {
+  if (access === null || refresh === null || accessExpires === null || refreshExpires === null || scope === null || authorizedAt === null || reauth === null) {
     return null;
   }
   return {
@@ -137,14 +137,19 @@ export class FeishuTokenStore extends DurableObject<Env> {
   }
 
   async alarm(): Promise<void> {
-    if (isDisabled(this.env.MCP_DISABLED)) return;
-    if (parseFeishuRegion(this.env.FEISHU_REGION) === null) return;
+    if (isDisabled(this.env.MCP_DISABLED) || parseFeishuRegion(this.env.FEISHU_REGION) === null) {
+      this.alarmBootstrapped = false;
+      return;
+    }
     const row = this.read();
     if (!row || row.reauth_required !== 0) return;
     const startedRefresh = row.refresh_token;
     const result = await this.getAccess({ force: true, alarm: true });
     if (result.ok) return;
-    if (result.reauth) return;
+    if (result.reauth) {
+      if (result.refreshFailed) audit({ event: "reauth_required", code: result.code });
+      return;
+    }
     const now = Date.now();
     const retryAt = now + HOUR_MS;
     const current = this.read();
