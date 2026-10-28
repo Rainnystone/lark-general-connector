@@ -205,4 +205,27 @@ describe("read_bitable", () => {
     expect(isEndpointAllowed("GET", `https://open.feishu.cn${APP_PATH}`)).toBe(true);
     expect(isEndpointAllowed("GET", `https://open.larksuite.com${APP_PATH}`)).toBe(false);
   });
+
+  it("sends bitable records reads to open.larksuite.com when FEISHU_REGION is lark", async () => {
+    env.FEISHU_REGION = "lark";
+    const { accessToken } = await login();
+    fake.extra = (method, url) => {
+      if (method === "GET" && url.pathname === RECORDS_PATH) {
+        return Response.json({ code: 0, data: baseRecords.data });
+      }
+      return undefined;
+    };
+    const before = fake.calls.length;
+    const response = await callTool(accessToken, "read_bitable", {
+      doc: `https://example.feishu.cn/base/${APP_TOKEN}`,
+      action: "records",
+      table_id: TABLE_ID,
+    });
+    expect(JSON.parse(toolText(response.body))).toEqual(baseRecords.data);
+    const outbound = fake.calls.slice(before).map((call) => call.url);
+    expect(outbound.some((url) => url === `https://open.larksuite.com${RECORDS_PATH}`)).toBe(true);
+    expect(outbound.every((url) => !url.includes("feishu.cn"))).toBe(true);
+    expect(isEndpointAllowed("GET", `https://open.feishu.cn${RECORDS_PATH}`)).toBe(true);
+    expect(isEndpointAllowed("GET", `https://open.larksuite.com${RECORDS_PATH}`)).toBe(false);
+  });
 });
