@@ -253,4 +253,15 @@ describe("redirect rules", () => {
     expect(isRedirectAllowed("https://chatgpt.com/connector/oauth/abc", gemini)).toBe(true);
     expect(isRedirectAllowed("https://claude.ai/api/mcp/auth_callback", gemini)).toBe(true);
   });
+
+  it("allows the exact Devin callback from the committed default and refuses near misses", () => {
+    const list = env.ALLOWED_REDIRECT_URIS;
+    const uri = "https://api.devin.ai/mcp/oauth/callback";
+    expect(isRedirectAllowed(uri, list)).toBe(true);
+    expect(isRedirectAllowed(`${uri}/`, list)).toBe(false);
+    expect(isRedirectAllowed(`${uri}/extra`, list)).toBe(false);
+    expect(isRedirectAllowed(`${uri}?x=1`, list)).toBe(false);
+    expect(isRedirectAllowed("https://api.devin.ai.evil.com/mcp/oauth/callback", list)).toBe(false);
+    expect(isRedirectAllowed("http://api.devin.ai/mcp/oauth/callback", list)).toBe(false);
+  });
 });
