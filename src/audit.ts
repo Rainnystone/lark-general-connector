@@ -9,7 +9,7 @@ export type AuditRecord =
     }
   | { event: "auth_ok" }
   | { event: "auth_rejected" }
-  | { event: "token_refresh"; ok: boolean; code: string }
+  | { event: "token_refresh"; ok: boolean; code: string; alarm?: true }
   | { event: "reauth_required"; code: string }
   | { event: "killswitch_block" }
   | { event: "invalid_region" }

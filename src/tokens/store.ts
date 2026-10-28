@@ -2,10 +2,14 @@ import { DurableObject } from "cloudflare:workers";
 import { audit } from "../audit";
 import type { Env } from "../env";
 import { exchangeToken } from "../feishu/api";
-import { FeishuClient } from "../feishu/client";
+import { FeishuClient, parseFeishuRegion } from "../feishu/client";
+import { isDisabled } from "../flags";
 
 const YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 const REFRESH_WINDOW_MS = 5 * 60 * 1000;
+const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+const MINUTE_MS = 60 * 1000;
 
 interface TokenRow {
   access_token: string;
@@ -70,6 +74,7 @@ function rowFrom(record: Record<string, unknown>): TokenRow | null {
 
 export class FeishuTokenStore extends DurableObject<Env> {
   private inflight: Promise<AccessResult> | null = null;
+  private alarmBootstrapped = false;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -91,9 +96,10 @@ export class FeishuTokenStore extends DurableObject<Env> {
     });
   }
 
-  putTokens(input: PutTokensInput): TokenStatus {
+  async putTokens(input: PutTokensInput): Promise<TokenStatus> {
     const now = Date.now();
     const authorizedAt = input.authorizedAt ?? now;
+    const refreshExpiresAt = now + input.refreshExpiresIn * 1000;
     this.ctx.storage.sql.exec(
       `INSERT INTO feishu_tokens (singleton, access_token, refresh_token, access_expires_at, refresh_expires_at, scope, authorized_at, reauth_required)
        VALUES (1, ?, ?, ?, ?, ?, ?, 0)
@@ -108,16 +114,18 @@ export class FeishuTokenStore extends DurableObject<Env> {
       input.accessToken,
       input.refreshToken,
       now + input.expiresIn * 1000,
-      now + input.refreshExpiresIn * 1000,
+      refreshExpiresAt,
       input.scope,
       authorizedAt,
     );
+    await this.scheduleKeepalive(refreshExpiresAt, now);
     return { stored: true, reauthRequired: false };
   }
 
-  status(): TokenStatus {
+  async status(): Promise<TokenStatus> {
     const row = this.read();
     if (!row || row.reauth_required !== 0) return { stored: false, reauthRequired: row?.reauth_required === 1 };
+    await this.bootstrapAlarm();
     return { stored: true, reauthRequired: false };
   }
 
@@ -128,7 +136,25 @@ export class FeishuTokenStore extends DurableObject<Env> {
     return true;
   }
 
-  async getAccess(options: { force: boolean }): Promise<AccessResult> {
+  async alarm(): Promise<void> {
+    if (isDisabled(this.env.MCP_DISABLED)) return;
+    if (parseFeishuRegion(this.env.FEISHU_REGION) === null) return;
+    const row = this.read();
+    if (!row || row.reauth_required !== 0) return;
+    const startedRefresh = row.refresh_token;
+    const result = await this.getAccess({ force: true, alarm: true });
+    if (result.ok) return;
+    if (result.reauth) return;
+    const now = Date.now();
+    const retryAt = now + HOUR_MS;
+    const current = this.read();
+    if (!current || current.reauth_required !== 0) return;
+    if (current.refresh_token !== startedRefresh) return;
+    if (retryAt >= current.refresh_expires_at) return;
+    await this.ctx.storage.setAlarm(retryAt);
+  }
+
+  async getAccess(options: { force: boolean; alarm?: boolean }): Promise<AccessResult> {
     const row = this.read();
     if (!row || row.reauth_required !== 0) {
       return { ok: false, reauth: true, code: "reauth_required", refreshFailed: false };
@@ -142,16 +168,35 @@ export class FeishuTokenStore extends DurableObject<Env> {
       this.markReauth();
       return { ok: false, reauth: true, code: "refresh_expired", refreshFailed: true };
     }
+    if (!options.alarm) await this.bootstrapAlarm();
     const needsRefresh = options.force || row.access_expires_at - now <= REFRESH_WINDOW_MS;
     if (!needsRefresh) return { ok: true, accessToken: row.access_token, refreshed: false };
     if (!this.inflight) {
-      const pending = this.refresh(row);
+      const pending = this.refresh(row, options.alarm === true);
       this.inflight = pending;
       void pending.finally(() => {
         if (this.inflight === pending) this.inflight = null;
       });
     }
     return this.inflight;
+  }
+
+  private async scheduleKeepalive(refreshExpiresAt: number, now = Date.now()): Promise<void> {
+    const remaining = refreshExpiresAt - now;
+    const lead = Math.min(TWO_DAYS_MS, remaining / 2);
+    await this.ctx.storage.setAlarm(Math.max(now + MINUTE_MS, refreshExpiresAt - lead));
+  }
+
+  private async bootstrapAlarm(): Promise<void> {
+    if (this.alarmBootstrapped) return;
+    await this.ctx.blockConcurrencyWhile(async () => {
+      if (this.alarmBootstrapped) return;
+      this.alarmBootstrapped = true;
+      if ((await this.ctx.storage.getAlarm()) !== null) return;
+      const row = this.read();
+      if (!row || row.reauth_required !== 0) return;
+      await this.scheduleKeepalive(row.refresh_expires_at);
+    });
   }
 
   private read(): TokenRow | null {
@@ -165,13 +210,17 @@ export class FeishuTokenStore extends DurableObject<Env> {
     return this.ctx.storage.sql.exec(query, ...bindings, refreshToken).rowsWritten > 0;
   }
 
-  private staleRefreshResult(): AccessResult {
+  private staleRefreshResult(fromAlarm: boolean): AccessResult {
     const current = this.read();
-    audit({ event: "token_refresh", ok: false, code: "stale" });
+    this.auditRefresh(false, "stale", fromAlarm);
     if (!current || current.reauth_required !== 0) {
       return { ok: false, reauth: true, code: "reauth_required", refreshFailed: false };
     }
     return { ok: true, accessToken: current.access_token, refreshed: false };
+  }
+
+  private auditRefresh(ok: boolean, code: string, fromAlarm: boolean): void {
+    audit(fromAlarm ? { event: "token_refresh", ok, code, alarm: true } : { event: "token_refresh", ok, code });
   }
 
   private markReauth(): void {
@@ -180,7 +229,7 @@ export class FeishuTokenStore extends DurableObject<Env> {
     );
   }
 
-  private async refresh(row: TokenRow): Promise<AccessResult> {
+  private async refresh(row: TokenRow, fromAlarm: boolean): Promise<AccessResult> {
     const params = new URLSearchParams({
       grant_type: "refresh_token",
       client_id: this.env.FEISHU_APP_ID,
@@ -191,12 +240,13 @@ export class FeishuTokenStore extends DurableObject<Env> {
     try {
       exchange = await exchangeToken(new FeishuClient(), params);
     } catch {
-      audit({ event: "token_refresh", ok: false, code: "network" });
+      this.auditRefresh(false, "network", fromAlarm);
       return { ok: false, reauth: false, code: "network", refreshFailed: false };
     }
     switch (exchange.kind) {
       case "ok": {
         const now = Date.now();
+        const refreshExpiresAt = now + exchange.token.refreshExpiresIn * 1000;
         const wrote = this.wroteSameRefresh(
           `UPDATE feishu_tokens SET access_token = ?, refresh_token = ?, access_expires_at = ?, refresh_expires_at = ?, scope = ?, reauth_required = 0
            WHERE singleton = 1 AND refresh_token = ?`,
@@ -204,11 +254,12 @@ export class FeishuTokenStore extends DurableObject<Env> {
           exchange.token.accessToken,
           exchange.token.refreshToken,
           now + exchange.token.expiresIn * 1000,
-          now + exchange.token.refreshExpiresIn * 1000,
+          refreshExpiresAt,
           exchange.token.scope || row.scope,
         );
-        if (!wrote) return this.staleRefreshResult();
-        audit({ event: "token_refresh", ok: true, code: "0" });
+        if (!wrote) return this.staleRefreshResult(fromAlarm);
+        this.auditRefresh(true, "0", fromAlarm);
+        await this.scheduleKeepalive(refreshExpiresAt, now);
         return { ok: true, accessToken: exchange.token.accessToken, refreshed: true };
       }
       case "permanent": {
@@ -216,12 +267,12 @@ export class FeishuTokenStore extends DurableObject<Env> {
           "UPDATE feishu_tokens SET access_token = '', refresh_token = '', reauth_required = 1 WHERE singleton = 1 AND refresh_token = ?",
           row.refresh_token,
         );
-        if (!wrote) return this.staleRefreshResult();
-        audit({ event: "token_refresh", ok: false, code: exchange.code });
+        if (!wrote) return this.staleRefreshResult(fromAlarm);
+        this.auditRefresh(false, exchange.code, fromAlarm);
         return { ok: false, reauth: true, code: exchange.code, refreshFailed: true };
       }
       case "transient":
-        audit({ event: "token_refresh", ok: false, code: exchange.code });
+        this.auditRefresh(false, exchange.code, fromAlarm);
         return { ok: false, reauth: false, code: exchange.code, refreshFailed: false };
       default: {
         const neverExchange: never = exchange;
