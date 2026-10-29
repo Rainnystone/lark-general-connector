@@ -233,6 +233,8 @@ Back in your AI client, **disconnect** the connector, then **connect it again** 
 
 **ChatGPT**: open **Settings → Apps → Advanced settings** and turn on **Developer mode**, then go to **Apps → Create**. Enter the URL `your connector URL/mcp`, choose **OAuth**, click **Scan Tools**, then **Create**. Some accounts show **Plugins → + → Add custom MCP server** instead. Plan availability and labels change over time, so check what your ChatGPT UI shows.
 
+**Codex**: no separate setup. Once the connector is added in ChatGPT, Codex can use it too.
+
 Other clients that support OAuth remote MCP should also work, but first add their callback URL to `ALLOWED_REDIRECT_URIS` (see [Configuration](#configuration)). Claude, ChatGPT, Codex, Gemini, and Devin have all been tested end to end.
 
 **Gemini**: add `your connector URL/mcp` as a custom connector with OAuth. Its callback (prefix `https://oauth-redirect.googleusercontent.com/r/user_bound_custom-mcp-*`) is allowed by default.

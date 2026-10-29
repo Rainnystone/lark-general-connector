@@ -233,6 +233,8 @@ open_id: ou_xxxxxxxxxxxxxxxx
 
 **ChatGPT**：打开 **Settings → Apps → Advanced settings**，开启 **Developer mode（开发者模式）**，然后进入 **Apps → Create**。URL 填 `你的连接器地址/mcp`，认证方式选 **OAuth**，点击 **Scan Tools**，再点 **Create**。部分账号显示的是 **Plugins → + → Add custom MCP server**。可用套餐和菜单名称会变化，请以你看到的界面为准。
 
+**Codex**：无需单独配置。在 ChatGPT 里添加好连接器后，Codex 也能直接使用。
+
 其他支持 OAuth 远程 MCP 的客户端理论上也能用，但需要先把它的回调地址加进 `ALLOWED_REDIRECT_URIS`（见[技术参考](#配置项)）。Claude、ChatGPT、Codex、Gemini 和 Devin 都已完整实测。
 
 **Gemini**：把 `你的连接器地址/mcp` 添加为自定义连接器，认证选 OAuth。它的回调（前缀 `https://oauth-redirect.googleusercontent.com/r/user_bound_custom-mcp-*`）默认已放行。
