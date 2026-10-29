@@ -2,9 +2,9 @@
 
 中文 | [English](./README.md)
 
-**让 Claude、ChatGPT 这类 AI 助手直接读写你的飞书文档、表格、多维表格、幻灯片和文件，阅读思维笔记，查看你的飞书聊天。**
+**让 Claude、ChatGPT、Codex、Gemini、Devin 这类 AI 助手直接读写你的飞书文档、表格、多维表格、幻灯片和文件，阅读思维笔记，查看你的飞书聊天。**
 
-部署好之后，你可以在 Claude 或 ChatGPT 里直接说：
+部署好之后，你可以在 AI 助手里直接说：
 
 - "帮我找一下上周关于 Q3 预算的飞书文档，总结要点。"
 - "把这份会议纪要整理好，新建成一篇飞书文档。"
@@ -23,7 +23,7 @@
 - [安全吗？](#安全吗)
 - [怎么安装：三种方式选一种](#怎么安装三种方式选一种)
 - [部署步骤](#部署步骤)
-- [连接到 Claude 或 ChatGPT](#连接到-claude-或-chatgpt)
+- [连接到 AI 客户端](#连接到-ai-客户端)
 - [常见问题](#常见问题)
 - [技术参考（给开发者）](#技术参考给开发者)
 
@@ -59,7 +59,7 @@
 
 1. **一个 Cloudflare 账号**（免费版就够用）：<https://dash.cloudflare.com/sign-up>
 2. **一个能创建"企业自建应用"的飞书账号。** 如果你是所在飞书组织的管理员，可以自己创建并发布；如果是公司的飞书，发布时可能需要管理员审批。
-3. **Claude 或 ChatGPT**，并且你的套餐支持添加自定义连接器。
+3. **Claude、ChatGPT、Codex、Gemini、Devin 等 MCP 客户端**，并且你的套餐支持添加自定义连接器。
 
 **三种方式的区别：**
 
@@ -75,7 +75,7 @@ Node.js 可以到 <https://nodejs.org> 下载 LTS 版本。方式 A 和 C 都不
 
 ```
 ① 在飞书创建应用  →  ② 部署到 Cloudflare  →  ③ 回飞书填回调地址
-→  ④ 开通权限、开机器人能力、发布应用  →  ⑤ 在 Claude/ChatGPT 里连接
+→  ④ 开通权限、开机器人能力、发布应用  →  ⑤ 在 AI 客户端里连接
 →  ⑥ 页面会拒绝你并显示你的 open_id（这是正常的！）
 →  ⑦ 把 open_id 填回去  →  ⑧ 重新连接，完成
 ```
@@ -93,7 +93,7 @@ Node.js 可以到 <https://nodejs.org> 下载 LTS 版本。方式 A 和 C 都不
    请把 https://github.com/Rainnystone/lark-general-connector 下载到当前文件夹，然后按仓库里的 AGENTS.md，把它部署到我自己的 Cloudflare 账号。需要我操作的步骤请停下来等我。
    ```
 
-3. 之后基本不用管。中途它会请你点几下确认：比如点链接创建飞书应用、授权 Cloudflare、在飞书后台填回调地址并发布、在 Claude 或 ChatGPT 里连接。App Secret 需要你从飞书后台复制，粘贴到它指定的终端里，**不要发在对话里**。
+3. 之后基本不用管。中途它会请你点几下确认：比如点链接创建飞书应用、授权 Cloudflare、在飞书后台填回调地址并发布、在 AI 客户端里连接。App Secret 需要你从飞书后台复制，粘贴到它指定的终端里，**不要发在对话里**。
 
 自动的步骤万一没成功，AI 会带你改走下面[部署步骤](#部署步骤)里的手动做法。[AGENTS.md](./AGENTS.md) 是写给 AI 看的部署手册。
 
@@ -184,9 +184,9 @@ Node.js 可以到 <https://nodejs.org> 下载 LTS 版本。方式 A 和 C 都不
 
 > 方式 A，或用 Lark CLI 创建应用时：新应用一开始几乎没有权限，上面清单里的要全部开通（方式 A 里 AI 会告诉你还缺哪几项）。另外检查 **应用身份权限（tenant_access_token）** 页签，**里面有的都要删掉**：连接器一个都不用，而它们只凭 App ID 和 App Secret 就能使用。
 
-### ⑤ 在 Claude 或 ChatGPT 里连接
+### ⑤ 在 AI 客户端里连接
 
-把下面这个地址添加为自定义连接器（具体怎么加见[连接到 Claude 或 ChatGPT](#连接到-claude-或-chatgpt)）：
+把下面这个地址添加为自定义连接器（具体怎么加见[连接到 AI 客户端](#连接到-ai-客户端)）：
 
 ```
 你的连接器地址/mcp
@@ -219,13 +219,13 @@ open_id: ou_xxxxxxxxxxxxxxxx
 
 ### ⑧ 重新连接
 
-回到 Claude 或 ChatGPT，**断开**这个连接器，再用同一个 `/mcp` 地址**重新连接**一次。这次登录就会成功。
+回到 AI 客户端，**断开**这个连接器，再用同一个 `/mcp` 地址**重新连接**一次。这次登录就会成功。
 
 🎉 完成！现在你可以在对话里让 AI 帮你处理飞书了。
 
 ---
 
-## 连接到 Claude 或 ChatGPT
+## 连接到 AI 客户端
 
 > 两家的菜单名称可能随版本调整，大致位置如下。
 
@@ -233,7 +233,11 @@ open_id: ou_xxxxxxxxxxxxxxxx
 
 **ChatGPT**：打开 **Settings → Apps → Advanced settings**，开启 **Developer mode（开发者模式）**，然后进入 **Apps → Create**。URL 填 `你的连接器地址/mcp`，认证方式选 **OAuth**，点击 **Scan Tools**，再点 **Create**。部分账号显示的是 **Plugins → + → Add custom MCP server**。可用套餐和菜单名称会变化，请以你看到的界面为准。
 
-其他支持 OAuth 远程 MCP 的客户端理论上也能用，但需要先把它的回调地址加进 `ALLOWED_REDIRECT_URIS`（见[技术参考](#配置项)）。Gemini 自定义连接器默认已放行（回调前缀 `https://oauth-redirect.googleusercontent.com/r/user_bound_custom-mcp-*`）。Devin 默认已放行（精确回调 `https://api.devin.ai/mcp/oauth/callback`）。目前完整实测过的只有 Claude 和 ChatGPT。
+其他支持 OAuth 远程 MCP 的客户端理论上也能用，但需要先把它的回调地址加进 `ALLOWED_REDIRECT_URIS`（见[技术参考](#配置项)）。Claude、ChatGPT、Codex、Gemini 和 Devin 都已完整实测。
+
+**Gemini**：把 `你的连接器地址/mcp` 添加为自定义连接器，认证选 OAuth。它的回调（前缀 `https://oauth-redirect.googleusercontent.com/r/user_bound_custom-mcp-*`）默认已放行。
+
+**Devin**：把 `你的连接器地址/mcp` 添加为远程 MCP 服务器，认证选 OAuth。它的回调（`https://api.devin.ai/mcp/oauth/callback`）默认已放行。
 
 ---
 
@@ -251,7 +255,9 @@ open_id: ou_xxxxxxxxxxxxxxxx
 
 ### AI 说"Feishu authorization expired; reconnect the connector"
 
-飞书的登录授权过期了（比如很久没用）。在 Claude 或 ChatGPT 里断开连接器，再用同一个地址重新连接即可。
+飞书的登录授权过期了（比如很久没用）。在 AI 客户端里断开连接器，再用同一个地址重新连接即可。
+
+这种情况很少见：连接器会在后台自动刷新飞书令牌，即使很久没用也不会掉授权。只有刷新令牌本身无法续期时才需要重连，比如被飞书吊销，或授权满一年。
 
 ### 公司的飞书创建不了应用 / 发布不了
 
@@ -359,6 +365,8 @@ Worker 同时是连接器客户端的 OAuth 授权服务器，以及 `/mcp` 上�
 ### 重新授权
 
 飞书刷新令牌失效后，令牌存储会标记需要重新授权。此后 `/mcp` 返回 `invalid_token`。工具返回 `Feishu authorization expired; reconnect the connector`。断开客户端，再连到同一个 `/mcp`。审计事件是 `reauth_required`。刷新尝试记下 `token_refresh`。
+
+保活：每次授权或刷新后，令牌 Durable Object 会在刷新令牌过期前设一个 alarm（提前两天；剩余不足四天时取剩余时间的一半）。即使没有任何工具调用，alarm 也会刷新令牌。临时失败时，只要刷新令牌仍有效，就每小时重试一次。alarm 刷新记下带 `alarm: true` 的 `token_refresh`。授权满一年后仍需重新连接。
 
 ### 审计事件
 

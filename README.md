@@ -2,9 +2,9 @@
 
 [中文](./README.zh-CN.md) | English
 
-**Let AI assistants like Claude and ChatGPT read and write your Feishu / Lark docs, sheets, Bases, slides, and files, read mind notes, and look through your chats.**
+**Let AI assistants like Claude, ChatGPT, Codex, Gemini, and Devin read and write your Feishu / Lark docs, sheets, Bases, slides, and files, read mind notes, and look through your chats.**
 
-Once it's set up, you can just say things like this in Claude or ChatGPT:
+Once it's set up, you can just say things like this in your AI assistant:
 
 - "Find last week's Feishu doc about the Q3 budget and summarize it."
 - "Clean up these meeting notes and save them as a new Feishu doc."
@@ -23,7 +23,7 @@ This is an open-source "connector": you deploy it into **your own** Cloudflare a
 - [Is it safe?](#is-it-safe)
 - [How to install: pick one of three paths](#how-to-install-pick-one-of-three-paths)
 - [Setup steps](#setup-steps)
-- [Connect it to Claude or ChatGPT](#connect-it-to-claude-or-chatgpt)
+- [Connect it to an AI client](#connect-it-to-an-ai-client)
 - [FAQ](#faq)
 - [Technical reference (for developers)](#technical-reference-for-developers)
 
@@ -59,7 +59,7 @@ Deleting a Base field or record, or a slide page, can't be undone, so the AI che
 
 1. **A Cloudflare account** (the free plan is enough): <https://dash.cloudflare.com/sign-up>
 2. **A Feishu or Lark account that can create a custom app.** If you are an admin of your Feishu organization, you can create and publish it yourself. In a company tenant, publishing may need admin approval.
-3. **Claude or ChatGPT**, on a plan that lets you add custom connectors.
+3. **An MCP client such as Claude, ChatGPT, Codex, Gemini, or Devin**, on a plan that lets you add custom connectors.
 
 **How the paths differ:**
 
@@ -75,7 +75,7 @@ All three follow the same 8 steps; they differ in how many steps are done for yo
 
 ```
 ① Create an app in Feishu  →  ② Deploy to Cloudflare  →  ③ Add the callback URL in Feishu
-→  ④ Add permissions, enable the bot, publish the app  →  ⑤ Connect in Claude/ChatGPT
+→  ④ Add permissions, enable the bot, publish the app  →  ⑤ Connect in your AI client
 →  ⑥ The page turns you away and shows your open_id (this is expected!)
 →  ⑦ Save that open_id  →  ⑧ Reconnect. Done.
 ```
@@ -93,7 +93,7 @@ Once you've picked a path, read just that section.
    Download https://github.com/Rainnystone/lark-general-connector into this folder, then follow AGENTS.md in the repository to deploy it into my own Cloudflare account. Stop and wait for me at every step I need to do.
    ```
 
-3. Then mostly leave it alone. It asks you to confirm a few things along the way: a link that creates the Feishu app, authorizing Cloudflare, adding the callback URL and publishing in the Feishu console, and connecting in Claude or ChatGPT. You copy the App Secret from the Feishu console and paste it into the terminal it points you to, **never into the chat**.
+3. Then mostly leave it alone. It asks you to confirm a few things along the way: a link that creates the Feishu app, authorizing Cloudflare, adding the callback URL and publishing in the Feishu console, and connecting in your AI client. You copy the App Secret from the Feishu console and paste it into the terminal it points you to, **never into the chat**.
 
 If an automated step doesn't work, the agent walks you through the manual version in [Setup steps](#setup-steps) below. [AGENTS.md](./AGENTS.md) is the deploy runbook written for the agent.
 
@@ -184,9 +184,9 @@ For example `https://lark-general-connector.<your-subdomain>.workers.dev/callbac
 
 > Path A, or an app created with Lark CLI: a new app starts with almost no permissions, so enable the whole list above (on path A the agent tells you which ones are missing). Also check the 应用身份权限 (tenant_access_token) tab and **remove anything there**: the connector uses none of those, and they work with the App ID and App Secret alone.
 
-### ⑤ Connect in Claude or ChatGPT
+### ⑤ Connect in your AI client
 
-Add this URL as a custom connector (see [Connect it to Claude or ChatGPT](#connect-it-to-claude-or-chatgpt) for where):
+Add this URL as a custom connector (see [Connect it to an AI client](#connect-it-to-an-ai-client) for where):
 
 ```
 your connector URL/mcp
@@ -219,13 +219,13 @@ Feishu open_id is per-app, so `OWNER_OPEN_ID` has to be the open_id under **this
 
 ### ⑧ Reconnect
 
-Back in Claude or ChatGPT, **disconnect** the connector, then **connect it again** with the same `/mcp` URL. This time login succeeds.
+Back in your AI client, **disconnect** the connector, then **connect it again** with the same `/mcp` URL. This time login succeeds.
 
 🎉 Done! You can now ask your AI assistant to work with your Feishu.
 
 ---
 
-## Connect it to Claude or ChatGPT
+## Connect it to an AI client
 
 > Menu names may change between versions. This is roughly where to look.
 
@@ -233,7 +233,11 @@ Back in Claude or ChatGPT, **disconnect** the connector, then **connect it again
 
 **ChatGPT**: open **Settings → Apps → Advanced settings** and turn on **Developer mode**, then go to **Apps → Create**. Enter the URL `your connector URL/mcp`, choose **OAuth**, click **Scan Tools**, then **Create**. Some accounts show **Plugins → + → Add custom MCP server** instead. Plan availability and labels change over time, so check what your ChatGPT UI shows.
 
-Other clients that support OAuth remote MCP should also work, but first add their callback URL to `ALLOWED_REDIRECT_URIS` (see [Configuration](#configuration)). Gemini custom connectors are allowed by default (redirect prefix `https://oauth-redirect.googleusercontent.com/r/user_bound_custom-mcp-*`). Devin is allowed by default (exact redirect `https://api.devin.ai/mcp/oauth/callback`). Only Claude and ChatGPT have been tested end to end.
+Other clients that support OAuth remote MCP should also work, but first add their callback URL to `ALLOWED_REDIRECT_URIS` (see [Configuration](#configuration)). Claude, ChatGPT, Codex, Gemini, and Devin have all been tested end to end.
+
+**Gemini**: add `your connector URL/mcp` as a custom connector with OAuth. Its callback (prefix `https://oauth-redirect.googleusercontent.com/r/user_bound_custom-mcp-*`) is allowed by default.
+
+**Devin**: add `your connector URL/mcp` as a remote MCP server with OAuth. Its callback (`https://api.devin.ai/mcp/oauth/callback`) is allowed by default.
 
 ---
 
@@ -251,7 +255,9 @@ Feishu open_id is per-app, so `OWNER_OPEN_ID` has to be the open_id under **this
 
 ### The AI says "Feishu authorization expired; reconnect the connector"
 
-Your Feishu authorization expired (for example, after a long time unused). Disconnect the connector in Claude or ChatGPT and connect it again with the same URL.
+Your Feishu authorization expired (for example, after a long time unused). Disconnect the connector in your AI client and connect it again with the same URL.
+
+You rarely need this: the connector refreshes the Feishu token automatically in the background, even when you haven't used it for a while. Reconnecting is only needed when the refresh token itself can no longer be renewed, for example when Feishu revokes it or the authorization reaches its one-year limit.
 
 ### My company's Feishu won't let me create or publish the app
 
@@ -359,6 +365,8 @@ Dashboard vars are not in `wrangler.jsonc`. A committed var with the same name a
 ### Re-auth
 
 When the Feishu refresh token is dead, the token store marks re-auth required. `/mcp` then returns `invalid_token`. Tools return `Feishu authorization expired; reconnect the connector`. Disconnect the client and connect it again to the same `/mcp` URL. The audit event is `reauth_required`. Refresh attempts log `token_refresh`.
+
+Keep-alive: after each authorization or refresh, the token Durable Object sets an alarm shortly before the refresh token expires (two days before, or halfway through if it has less than four days left). The alarm refreshes the token even when no tool is called. A transient failure retries hourly while the refresh token is still valid. Alarm refreshes log `token_refresh` with `alarm: true`. Authorization older than one year still requires a reconnect.
 
 ### Audit events
 
